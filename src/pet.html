@@ -99,19 +99,27 @@ const GIFS = {
   idle:     '../assets/clawd-idle.gif',
   working:  '../assets/clawd-building.gif',
   thinking: '../assets/clawd-thinking.gif',
+  typing:   '../assets/clawd-typing.gif',
+  sleeping: '../assets/clawd-sleeping.gif',
+  happy:    '../assets/clawd-happy.gif',
 };
 
 let modeTimer = null;
+let currentMode = 'idle';
+// Priority: translation/screenshot > typing > idle/sleeping
+const PRIORITY = { working:5, thinking:4, happy:3, typing:2, idle:1, sleeping:0 };
 
 function setMode(m, duration = 0) {
+  if ((PRIORITY[m] || 0) < (PRIORITY[currentMode] || 0) && duration === 0) return;
+  currentMode = m;
   const src = GIFS[m] || GIFS.idle;
-  if (crab.src !== src) {
-    // Force GIF restart by appending cache-bust then removing it
-    crab.src = src + '?t=' + Date.now();
-  }
+  crab.src = src + '?t=' + Date.now();
   if (modeTimer) { clearTimeout(modeTimer); modeTimer = null; }
-  if (duration > 0) modeTimer = setTimeout(() => setMode('idle'), duration);
+  if (duration > 0) modeTimer = setTimeout(() => { currentMode = 'idle'; setMode('idle'); }, duration);
 }
+
+// Mode pushed from main process (keyboard / sleep detection)
+window.api.onSetMode((mode) => setMode(mode));
 
 // ── Drag ─────────────────────────────────────────────────────────────────
 const wrap = document.getElementById('pet-wrap');

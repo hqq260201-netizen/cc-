@@ -4,6 +4,7 @@ const {
 } = require('electron');
 const path = require('path');
 const { OpenAI } = require('openai');
+const { uIOhook } = require('uiohook-napi');
 
 const qwen = new OpenAI({
   apiKey: 'sk-a911b5d2dab44dccb01d168083ed8100',
@@ -13,6 +14,45 @@ const qwen = new OpenAI({
 let petWindow, translationWindow, screenshotWindow, tray;
 let realtimeInterval = null;
 let lastClipboardText = '';
+let isRealtimeOn = false;
+
+// ─── Keyboard/sleep detection ────────────────────────────────────────────────
+let typingTimer = null;
+let sleepTimer = null;
+let isTyping = false;
+let isSleeping = false;
+const TYPING_STOP_MS = 2000;  // return to idle after 2s no keypress
+const SLEEP_IDLE_MS  = 5 * 60 * 1000; // sleep after 5 min no input
+
+function onKeyActivity() {
+  if (isSleeping) {
+    isSleeping = false;
+    sendPetMode('idle');
+  }
+  // Reset sleep timer
+  clearTimeout(sleepTimer);
+  sleepTimer = setTimeout(() => {
+    isSleeping = true;
+    sendPetMode('sleeping');
+  }, SLEEP_IDLE_MS);
+
+  // Typing animation
+  if (!isTyping) {
+    isTyping = true;
+    sendPetMode('typing');
+  }
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => {
+    isTyping = false;
+    if (!isSleeping) sendPetMode('idle');
+  }, TYPING_STOP_MS);
+}
+
+function sendPetMode(mode) {
+  if (petWindow && !petWindow.isDestroyed()) {
+    petWindow.webContents.send('set-mode', mode);
+  }
+}
 let isRealtimeOn = false;
 
 // ─── Window factories ────────────────────────────────────────────────────────
@@ -219,6 +259,25 @@ app.whenReady().then(() => {
   createPetWindow();
   createTranslationWindow();
   createScreenshotWindow();
+
+  // Global keyboard & mouse hook
+  try {
+    uIOhook.on('keydown', onKeyActivity);
+    uIOhook.on('mouseclick', onKeyActivity);
+    uIOhook.start();
+  } catch (e) {
+    console.warn('uIOhook failed to start:', e.message);
+  }
+
+  // Start sleep timer immediately
+  sleepTimer = setTimeout(() => {
+    isSleeping = true;
+    sendPetMode('sleeping');
+  }, SLEEP_IDLE_MS);
+});
+
+app.on('before-quit', () => {
+  try { uIOhook.stop(); } catch {}
 });
 
 app.on('window-all-closed', () => {

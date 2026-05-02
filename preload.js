@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('api', {
   onUpdateTranslation: (cb) => ipcRenderer.on('update-translation', (_, d) => cb(d)),
   onSetScreenshot: (cb) => ipcRenderer.on('set-screenshot', (_, d) => cb(d)),
   onRealtimeStatus: (cb) => ipcRenderer.on('realtime-status', (_, d) => cb(d)),
+  onSetMode: (cb) => ipcRenderer.on('set-mode', (_, mode) => cb(mode)),
 
   removeListener: (ch) => ipcRenderer.removeAllListeners(ch),
 });

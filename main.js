@@ -22,8 +22,8 @@ let typingTimer = null;
 let sleepTimer = null;
 let isTyping = false;
 let isSleeping = false;
-const TYPING_STOP_MS = 2000;  // return to idle after 2s no keypress
-const SLEEP_IDLE_MS  = 1 * 60 * 1000; // sleep after 1 min no input
+const TYPING_STOP_MS = 2000;       // return to idle after 2s no keypress
+const SLEEP_IDLE_MS  = 30 * 1000;  // sleep after 30s no input
 
 function onKeyActivity() {
   if (isSleeping) {

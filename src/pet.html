@@ -138,12 +138,23 @@
 const crab = document.getElementById('crab');
 
 const GIFS = {
-  idle:     '../assets/clawd-idle.gif',
-  working:  '../assets/clawd-building.gif',
-  thinking: '../assets/clawd-thinking.gif',
-  typing:   '../assets/clawd-typing.gif',
-  sleeping: '../assets/clawd-sleeping.gif',
-  happy:    '../assets/clawd-happy.gif',
+  idle:        '../assets/clawd-idle.gif',
+  working:     '../assets/clawd-building.gif',
+  thinking:    '../assets/clawd-thinking.gif',
+  typing:      '../assets/clawd-typing.gif',
+  sleeping:    '../assets/clawd-sleeping.gif',
+  happy:       '../assets/clawd-happy.gif',
+  sweeping:    '../assets/clawd-sweeping.gif',
+  carrying:    '../assets/clawd-carrying.gif',
+  conducting:  '../assets/clawd-conducting.gif',
+  debugger:    '../assets/clawd-debugger.gif',
+  error:       '../assets/clawd-error.gif',
+  reading:     '../assets/clawd-idle-reading.gif',
+  juggling:    '../assets/clawd-juggling.gif',
+  alert:       '../assets/clawd-mini-alert.gif',
+  notice:      '../assets/clawd-notification.gif',
+  annoyed:     '../assets/clawd-react-annoyed.gif',
+  jump:        '../assets/clawd-react-double-jump.gif',
 };
 
 // CSS-only animation modes (no dedicated GIF)
@@ -153,8 +164,8 @@ let modeTimer = null;
 let currentMode = 'idle';
 const PRIORITY = { working:5, thinking:4, happy:3, waving:2.5, dancing:2.5, excited:2.5, eating:2.5, typing:2, idle:1, sleeping:0 };
 
-function setMode(m, duration = 0) {
-  if ((PRIORITY[m] || 0) < (PRIORITY[currentMode] || 0) && duration === 0) return;
+function setMode(m, duration = 0, force = false) {
+  if (!force && (PRIORITY[m] || 0) < (PRIORITY[currentMode] || 0) && duration === 0) return;
   currentMode = m;
 
   // Remove all CSS animation classes
@@ -172,7 +183,7 @@ function setMode(m, duration = 0) {
   if (duration > 0) modeTimer = setTimeout(() => { currentMode = 'idle'; setMode('idle'); }, duration);
 }
 
-window.api.onSetMode((mode) => setMode(mode));
+window.api.onSetMode((mode) => setMode(mode, 0, true));
 
 // ── Drag ─────────────────────────────────────────────────────────────────
 const wrap = document.getElementById('pet-wrap');
@@ -213,7 +224,7 @@ document.addEventListener('click', () => menu.classList.remove('visible'));
 
 document.getElementById('btn-screenshot').addEventListener('click', async (e) => {
   e.stopPropagation(); menu.classList.remove('visible');
-  setMode('working');
+  setMode('working', 30000); // 30s timeout fallback
   await window.api.startScreenshot();
 });
 
@@ -245,12 +256,12 @@ window.api.onRealtimeStatus(({ on }) => {
   realtimeOn = on;
   document.getElementById('rt-ico').textContent = on ? '🟢' : '🔴';
   document.getElementById('realtime-badge').style.display = on ? 'inline' : 'none';
-  setMode(on ? 'working' : 'idle');
+  setMode(on ? 'working' : 'idle', 0, true);
 });
 
 window.api.onUpdateTranslation(({ loading }) => {
-  if (loading) setMode('thinking');
-  else         setMode('happy', 2500);
+  if (loading) setMode('thinking', 0, true);  // force override working
+  else         setMode('happy', 2500, true);   // force override thinking
 });
 </script>
 </body>

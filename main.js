@@ -53,7 +53,6 @@ function sendPetMode(mode) {
     petWindow.webContents.send('set-mode', mode);
   }
 }
-let isRealtimeOn = false;
 
 // ─── Window factories ────────────────────────────────────────────────────────
 

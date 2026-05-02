@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('api', {
   // Translation window
   closeTranslation: () => ipcRenderer.invoke('close-translation'),
   copyTranslation: (text) => ipcRenderer.invoke('copy-translation', text),
+  quitApp: () => ipcRenderer.invoke('quit-app'),
+  toggleDirection: () => ipcRenderer.invoke('toggle-direction'),
 
   // Events from main → renderer
   onUpdateTranslation: (cb) => ipcRenderer.on('update-translation', (_, d) => cb(d)),

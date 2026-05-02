@@ -15,6 +15,7 @@ let petWindow, translationWindow, screenshotWindow, tray;
 let realtimeInterval = null;
 let lastClipboardText = '';
 let isRealtimeOn = false;
+let isZh2En = false; // translation direction toggle
 
 // ─── Keyboard/sleep detection ────────────────────────────────────────────────
 let typingTimer = null;
@@ -22,7 +23,7 @@ let sleepTimer = null;
 let isTyping = false;
 let isSleeping = false;
 const TYPING_STOP_MS = 2000;  // return to idle after 2s no keypress
-const SLEEP_IDLE_MS  = 5 * 60 * 1000; // sleep after 5 min no input
+const SLEEP_IDLE_MS  = 1 * 60 * 1000; // sleep after 1 min no input
 
 function onKeyActivity() {
   if (isSleeping) {
@@ -135,13 +136,13 @@ function showTranslation(text, loading = false) {
 // ─── Qwen API helpers ────────────────────────────────────────────────────────
 
 async function translateText(text) {
+  const direction = isZh2En
+    ? '你是专业翻译助手，请将用户输入的中文翻译成英文，只返回翻译结果，不需要解释或前缀。'
+    : '你是专业翻译助手，请将用户输入的英文翻译成中文，只返回翻译结果，不需要解释或前缀。';
   const res = await qwen.chat.completions.create({
     model: 'qwen-plus',
     messages: [
-      {
-        role: 'system',
-        content: '你是专业翻译助手，请将用户输入的英文翻译成中文，只返回翻译结果，不需要解释或前缀。',
-      },
+      { role: 'system', content: direction },
       { role: 'user', content: text },
     ],
   });
@@ -149,6 +150,9 @@ async function translateText(text) {
 }
 
 async function translateImage(base64Png) {
+  const prompt = isZh2En
+    ? '请识别图片中的所有中文文字，然后将其翻译成英文。格式：\n【原文】\n...\n【译文】\n...'
+    : '请识别图片中的所有英文文字，然后将其翻译成中文。格式：\n【原文】\n...\n【译文】\n...';
   const res = await qwen.chat.completions.create({
     model: 'qwen-vl-plus',
     messages: [
@@ -159,10 +163,7 @@ async function translateImage(base64Png) {
             type: 'image_url',
             image_url: { url: `data:image/png;base64,${base64Png}` },
           },
-          {
-            type: 'text',
-            text: '请识别图片中的所有英文文字，然后将其翻译成中文。格式：\n【原文】\n...\n【译文】\n...',
-          },
+          { type: 'text', text: prompt },
         ],
       },
     ],
@@ -203,7 +204,8 @@ ipcMain.handle('screenshot-selected', async (_, { x, y, w, h, imgData }) => {
     const cropped = img.crop({ x: Math.round(x), y: Math.round(y), width: Math.round(w), height: Math.round(h) });
     const base64 = cropped.toPNG().toString('base64');
     const result = await translateImage(base64);
-    showTranslation(result);
+    clipboard.writeText(result);
+    showTranslation(result + '\n\n📋 已自动复制到剪贴板');
   } catch (e) {
     showTranslation('翻译失败：' + e.message);
   }
@@ -251,6 +253,13 @@ ipcMain.handle('stop-realtime', () => {
 ipcMain.handle('close-translation', () => translationWindow.hide());
 
 ipcMain.handle('copy-translation', (_, text) => clipboard.writeText(text));
+
+ipcMain.handle('quit-app', () => app.quit());
+
+ipcMain.handle('toggle-direction', () => {
+  isZh2En = !isZh2En;
+  return { isZh2En };
+});
 
 // ─── App lifecycle ───────────────────────────────────────────────────────────
 

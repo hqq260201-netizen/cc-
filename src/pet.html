@@ -23,6 +23,40 @@
     object-fit: contain;
     image-rendering: pixelated;
     pointer-events: none;
+    transition: transform 0.2s ease;
+  }
+
+  /* ── Pet CSS animations (no extra GIFs needed) ── */
+  #crab.waving {
+    animation: wave 0.4s ease-in-out infinite alternate;
+  }
+  #crab.dancing {
+    animation: dance 0.5s ease-in-out infinite;
+  }
+  #crab.excited {
+    animation: excited 0.25s ease-in-out infinite alternate;
+  }
+  #crab.eating {
+    animation: eat 0.3s ease-in-out infinite;
+  }
+
+  @keyframes wave {
+    0%   { transform: rotate(-12deg) translateY(0); }
+    100% { transform: rotate(12deg) translateY(-4px); }
+  }
+  @keyframes dance {
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    25%  { transform: translateY(-8px) rotate(-8deg) scale(1.08); }
+    50%  { transform: translateY(0) rotate(0deg) scale(1); }
+    75%  { transform: translateY(-6px) rotate(8deg) scale(1.06); }
+  }
+  @keyframes excited {
+    0%   { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-10px) scale(1.1); }
+  }
+  @keyframes eat {
+    0%, 100% { transform: scale(1, 1); }
+    50%  { transform: scale(1.08, 0.92); }
   }
 
   /* ── Context menu ── */
@@ -90,6 +124,14 @@
     <span class="ico" id="rt-ico">🔴</span> 实时翻译
     <span id="realtime-badge" style="display:none">ON</span>
   </div>
+  <div class="menu-sep"></div>
+  <div class="menu-item" id="btn-direction">
+    <span class="ico" id="dir-ico">🔤</span> <span id="dir-label">英→中</span>
+  </div>
+  <div class="menu-sep"></div>
+  <div class="menu-item" id="btn-quit">
+    <span class="ico">🚪</span> 退出
+  </div>
 </div>
 
 <script>
@@ -104,21 +146,32 @@ const GIFS = {
   happy:    '../assets/clawd-happy.gif',
 };
 
+// CSS-only animation modes (no dedicated GIF)
+const CSS_MODES = ['waving', 'dancing', 'excited', 'eating'];
+
 let modeTimer = null;
 let currentMode = 'idle';
-// Priority: translation/screenshot > typing > idle/sleeping
-const PRIORITY = { working:5, thinking:4, happy:3, typing:2, idle:1, sleeping:0 };
+const PRIORITY = { working:5, thinking:4, happy:3, waving:2.5, dancing:2.5, excited:2.5, eating:2.5, typing:2, idle:1, sleeping:0 };
 
 function setMode(m, duration = 0) {
   if ((PRIORITY[m] || 0) < (PRIORITY[currentMode] || 0) && duration === 0) return;
   currentMode = m;
-  const src = GIFS[m] || GIFS.idle;
-  crab.src = src + '?t=' + Date.now();
+
+  // Remove all CSS animation classes
+  crab.classList.remove(...CSS_MODES);
+
+  if (CSS_MODES.includes(m)) {
+    // Use idle GIF + CSS animation overlay
+    crab.src = GIFS.idle + '?t=' + Date.now();
+    crab.classList.add(m);
+  } else {
+    crab.src = (GIFS[m] || GIFS.idle) + '?t=' + Date.now();
+  }
+
   if (modeTimer) { clearTimeout(modeTimer); modeTimer = null; }
   if (duration > 0) modeTimer = setTimeout(() => { currentMode = 'idle'; setMode('idle'); }, duration);
 }
 
-// Mode pushed from main process (keyboard / sleep detection)
 window.api.onSetMode((mode) => setMode(mode));
 
 // ── Drag ─────────────────────────────────────────────────────────────────
@@ -168,13 +221,24 @@ document.getElementById('btn-paste').addEventListener('click', async (e) => {
   e.stopPropagation(); menu.classList.remove('visible');
   setMode('thinking');
   await window.api.translateClipboard();
-  setMode('idle', 100);
+  setMode('happy', 2500);
 });
 
 document.getElementById('btn-realtime').addEventListener('click', async (e) => {
   e.stopPropagation(); menu.classList.remove('visible');
   if (!realtimeOn) await window.api.startRealtime();
   else             await window.api.stopRealtime();
+});
+
+document.getElementById('btn-direction').addEventListener('click', async (e) => {
+  e.stopPropagation(); menu.classList.remove('visible');
+  const { isZh2En } = await window.api.toggleDirection();
+  document.getElementById('dir-label').textContent = isZh2En ? '中→英' : '英→中';
+});
+
+document.getElementById('btn-quit').addEventListener('click', (e) => {
+  e.stopPropagation(); menu.classList.remove('visible');
+  window.api.quitApp();
 });
 
 window.api.onRealtimeStatus(({ on }) => {
@@ -186,7 +250,7 @@ window.api.onRealtimeStatus(({ on }) => {
 
 window.api.onUpdateTranslation(({ loading }) => {
   if (loading) setMode('thinking');
-  else         setMode('idle', 100);
+  else         setMode('happy', 2500);
 });
 </script>
 </body>

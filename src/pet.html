@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 120px; height: 140px; overflow: hidden; background: transparent; user-select: none; }
+  html, body { width: 120px; height: 130px; overflow: hidden; background: transparent; user-select: none; }
 
   #pet-wrap {
     width: 120px;
-    height: 140px;
+    height: 130px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,36 +17,12 @@
   }
   #pet-wrap:active { cursor: grabbing; }
 
-  /* ── Crab image ── */
   #crab {
-    width: 100px;
-    height: auto;
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
     image-rendering: pixelated;
-    animation: bob 2s ease-in-out infinite;
-    transform-origin: center bottom;
-    transition: filter 0.3s;
-  }
-
-  @keyframes bob {
-    0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-5px); }
-  }
-
-  #crab.happy {
-    animation: bounce 0.4s ease-in-out infinite;
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0) rotate(-4deg); }
-    50%       { transform: translateY(-8px) rotate(4deg); }
-  }
-
-  #crab.working {
-    animation: shake 0.15s ease-in-out infinite;
-  }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25%       { transform: translateX(-3px) rotate(-3deg); }
-    75%       { transform: translateX(3px) rotate(3deg); }
+    pointer-events: none;
   }
 
   /* ── Context menu ── */
@@ -54,14 +30,14 @@
     display: none;
     position: fixed;
     top: 0; left: 0;
-    background: rgba(20,15,28,0.93);
+    background: rgba(18,14,26,0.94);
     border: 1px solid rgba(218,119,86,0.5);
     border-radius: 10px;
     padding: 6px 0;
     min-width: 138px;
     z-index: 9999;
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
     animation: popIn 0.14s ease;
   }
   #menu.visible { display: block; }
@@ -92,13 +68,13 @@
     background: #4caf50;
     color: #fff;
     border-radius: 4px;
-    padding: 1px 4px;
+    padding: 1px 5px;
   }
 </style>
 </head>
 <body>
 <div id="pet-wrap">
-  <img id="crab" src="../assets/crab.svg" draggable="false" alt="crab"/>
+  <img id="crab" src="../assets/clawd-idle.gif" draggable="false" alt="Clawd"/>
 </div>
 
 <!-- context menu -->
@@ -117,35 +93,45 @@
 </div>
 
 <script>
-// ── Crab animation state ──────────────────────────────────────────────────
 const crab = document.getElementById('crab');
+
+const GIFS = {
+  idle:     '../assets/clawd-idle.gif',
+  working:  '../assets/clawd-building.gif',
+  thinking: '../assets/clawd-thinking.gif',
+};
+
 let modeTimer = null;
 
 function setMode(m, duration = 0) {
-  crab.className = m === 'idle' ? '' : m;
+  const src = GIFS[m] || GIFS.idle;
+  if (crab.src !== src) {
+    // Force GIF restart by appending cache-bust then removing it
+    crab.src = src + '?t=' + Date.now();
+  }
   if (modeTimer) { clearTimeout(modeTimer); modeTimer = null; }
-  if (duration > 0) modeTimer = setTimeout(() => { crab.className = ''; }, duration);
+  if (duration > 0) modeTimer = setTimeout(() => setMode('idle'), duration);
 }
 
 // ── Drag ─────────────────────────────────────────────────────────────────
 const wrap = document.getElementById('pet-wrap');
-let dragging = false;
+let dragging = false, moved = false;
 let dragStartX = 0, dragStartY = 0;
 let winStartX = 0, winStartY = 0;
 
 wrap.addEventListener('mousedown', async (e) => {
   if (e.button !== 0) return;
-  dragging = true;
-  dragStartX = e.screenX;
-  dragStartY = e.screenY;
+  dragging = true; moved = false;
+  dragStartX = e.screenX; dragStartY = e.screenY;
   const pos = await window.api.getPetPosition();
-  winStartX = pos[0];
-  winStartY = pos[1];
+  winStartX = pos[0]; winStartY = pos[1];
 });
 
 window.addEventListener('mousemove', (e) => {
   if (!dragging) return;
-  window.api.movePet({ x: winStartX + e.screenX - dragStartX, y: winStartY + e.screenY - dragStartY });
+  const dx = e.screenX - dragStartX, dy = e.screenY - dragStartY;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+  window.api.movePet({ x: winStartX + dx, y: winStartY + dy });
 });
 
 window.addEventListener('mouseup', () => { dragging = false; });
@@ -155,34 +141,30 @@ const menu = document.getElementById('menu');
 let realtimeOn = false;
 
 wrap.addEventListener('click', (e) => {
-  if (dragging) return;
-  // Position menu to the right, or left if near screen edge
+  if (moved) { moved = false; return; }
   menu.style.left = '124px';
   menu.style.top = '10px';
-  menu.classList.add('visible');
+  menu.classList.toggle('visible');
   e.stopPropagation();
 });
 
 document.addEventListener('click', () => menu.classList.remove('visible'));
 
 document.getElementById('btn-screenshot').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  menu.classList.remove('visible');
+  e.stopPropagation(); menu.classList.remove('visible');
   setMode('working');
   await window.api.startScreenshot();
 });
 
 document.getElementById('btn-paste').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  menu.classList.remove('visible');
-  setMode('working');
+  e.stopPropagation(); menu.classList.remove('visible');
+  setMode('thinking');
   await window.api.translateClipboard();
-  setMode('happy', 3000);
+  setMode('idle', 100);
 });
 
 document.getElementById('btn-realtime').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  menu.classList.remove('visible');
+  e.stopPropagation(); menu.classList.remove('visible');
   if (!realtimeOn) await window.api.startRealtime();
   else             await window.api.stopRealtime();
 });
@@ -190,13 +172,13 @@ document.getElementById('btn-realtime').addEventListener('click', async (e) => {
 window.api.onRealtimeStatus(({ on }) => {
   realtimeOn = on;
   document.getElementById('rt-ico').textContent = on ? '🟢' : '🔴';
-  const badge = document.getElementById('realtime-badge');
-  badge.style.display = on ? 'inline' : 'none';
-  if (on) setMode('happy'); else setMode('idle');
+  document.getElementById('realtime-badge').style.display = on ? 'inline' : 'none';
+  setMode(on ? 'working' : 'idle');
 });
 
 window.api.onUpdateTranslation(({ loading }) => {
-  if (!loading) setMode('happy', 3000);
+  if (loading) setMode('thinking');
+  else         setMode('idle', 100);
 });
 </script>
 </body>

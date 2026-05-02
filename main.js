@@ -207,20 +207,26 @@ ipcMain.handle('screenshot-selected', async (_, { x, y, w, h, imgData }) => {
     clipboard.writeText(result);
     showTranslation(result + '\n\n📋 已自动复制到剪贴板');
   } catch (e) {
+    sendPetMode('error');
+    setTimeout(() => sendPetMode('idle'), 3000);
     showTranslation('翻译失败：' + e.message);
   }
 });
 
-ipcMain.handle('cancel-screenshot', () => screenshotWindow.hide());
+ipcMain.handle('cancel-screenshot', () => { screenshotWindow.hide(); });
 
 ipcMain.handle('translate-clipboard', async () => {
   const text = clipboard.readText().trim();
-  if (!text) { showTranslation('剪贴板为空'); return; }
+  if (!text) { sendPetMode('alert'); setTimeout(() => sendPetMode('idle'), 2000); showTranslation('剪贴板为空'); return; }
   showTranslation('正在翻译…', true);
   try {
     const result = await translateText(text);
+    sendPetMode('jump');
+    setTimeout(() => sendPetMode('happy'), 600);
     showTranslation(result);
   } catch (e) {
+    sendPetMode('error');
+    setTimeout(() => sendPetMode('idle'), 3000);
     showTranslation('翻译失败：' + e.message);
   }
 });

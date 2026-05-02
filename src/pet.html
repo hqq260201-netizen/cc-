@@ -160,13 +160,38 @@ const GIFS = {
 // CSS-only animation modes (no dedicated GIF)
 const CSS_MODES = ['waving', 'dancing', 'excited', 'eating'];
 
+const IDLE_VARIANTS = ['idle', 'reading', 'sweeping', 'juggling'];
+let idleVariantTimer = null;
 let modeTimer = null;
 let currentMode = 'idle';
 const PRIORITY = { working:5, thinking:4, happy:3, waving:2.5, dancing:2.5, excited:2.5, eating:2.5, typing:2, idle:1, sleeping:0 };
 
+function startIdleVariants() {
+  clearInterval(idleVariantTimer);
+  idleVariantTimer = setInterval(() => {
+    if (currentMode === 'idle' || currentMode === 'reading' || currentMode === 'sweeping' || currentMode === 'juggling') {
+      const pool = IDLE_VARIANTS.filter(v => v !== currentMode);
+      const next = pool[Math.floor(Math.random() * pool.length)];
+      setMode(next, 0, true);
+    }
+  }, 25000); // swap every 25s
+}
+
+function stopIdleVariants() {
+  clearInterval(idleVariantTimer);
+  idleVariantTimer = null;
+}
+
 function setMode(m, duration = 0, force = false) {
   if (!force && (PRIORITY[m] || 0) < (PRIORITY[currentMode] || 0) && duration === 0) return;
   currentMode = m;
+
+  // Manage idle variant cycling
+  if (IDLE_VARIANTS.includes(m) || m === 'sleeping') {
+    if (!idleVariantTimer) startIdleVariants();
+  } else {
+    stopIdleVariants();
+  }
 
   // Remove all CSS animation classes
   crab.classList.remove(...CSS_MODES);

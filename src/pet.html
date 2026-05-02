@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 120px; height: 140px; overflow: hidden; background: transparent; user-select: none; }
+
+  #pet-wrap {
+    width: 120px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: grab;
+    position: relative;
+  }
+  #pet-wrap:active { cursor: grabbing; }
+
+  canvas#crab {
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  /* ── Context menu ── */
+  #menu {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    background: rgba(20,20,30,0.92);
+    border: 1px solid rgba(232,112,74,0.5);
+    border-radius: 10px;
+    padding: 6px 0;
+    min-width: 130px;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    animation: popIn 0.15s ease;
+  }
+  #menu.visible { display: block; }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .menu-item {
+    padding: 8px 16px;
+    color: #f0d0c0;
+    font-family: 'Microsoft YaHei', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.12s;
+  }
+  .menu-item:hover { background: rgba(232,112,74,0.25); color: #fff; }
+  .menu-item .ico { font-size: 15px; width: 18px; text-align: center; }
+  .menu-item.active .ico { color: #4caf50; }
+
+  .menu-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
+
+  #realtime-badge {
+    font-size: 10px;
+    background: #4caf50;
+    color: #fff;
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: 2px;
+  }
+</style>
+</head>
+<body>
+<div id="pet-wrap">
+  <canvas id="crab" width="102" height="84"></canvas>
+</div>
+
+<!-- context menu -->
+<div id="menu">
+  <div class="menu-item" id="btn-screenshot">
+    <span class="ico">✂️</span> 截屏翻译
+  </div>
+  <div class="menu-item" id="btn-paste">
+    <span class="ico">📋</span> 粘贴翻译
+  </div>
+  <div class="menu-sep"></div>
+  <div class="menu-item" id="btn-realtime">
+    <span class="ico" id="rt-ico">🔴</span> 实时翻译
+    <span id="realtime-badge" style="display:none">ON</span>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  Pixel-art crab renderer + animator
+// ══════════════════════════════════════════════
+const canvas = document.getElementById('crab');
+const ctx = canvas.getContext('2d');
+const PX = 6; // pixels per "dot"
+
+// 0=transparent 1=orange 2=dark-orange 3=eye 4=highlight
+const C = { 0:null, 1:'#E8704A', 2:'#C05030', 3:'#0D0500', 4:'#F09070' };
+
+// 17×14 pixel map
+const BASE = [
+//0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16
+ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 0
+ [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], // 1
+ [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0], // 2
+ [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0], // 3
+ [1, 0, 0, 1, 1, 4, 1, 1, 1, 1, 1, 4, 1, 0, 0, 1, 0], // 4
+ [0, 1, 0, 0, 1, 3, 0, 1, 1, 1, 3, 1, 1, 0, 1, 0, 0], // 5  eyes
+ [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], // 6
+ [0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0], // 7  mouth
+ [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0], // 8
+ [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], // 9
+ [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], // 10
+ [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], // 11
+ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 12
+ [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 13
+];
+
+// Animation state
+let frame = 0;
+let bobOffset = 0;
+let clawRaise = 0;   // 0–3 extra rows claws are raised
+let blinkTimer = 0;
+let isBlinking = false;
+let mode = 'idle';   // 'idle' | 'happy' | 'working'
+let workAngle = 0;
+
+function buildFrame() {
+  // deep-copy
+  const grid = BASE.map(r => [...r]);
+
+  // Blink: replace eye pixels with orange
+  if (isBlinking) {
+    grid[5][5] = 1; grid[5][10] = 1;
+  }
+
+  // Claw raise: shift rows 1-2 up by clawRaise
+  if (clawRaise > 0) {
+    for (let r = 1; r >= clawRaise; r--) {
+      grid[r] = grid[r + clawRaise] ? grid[r + clawRaise].map(v=>v) : new Array(17).fill(0);
+    }
+  }
+  return grid;
+}
+
+function drawGrid(grid, yShift) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  grid.forEach((row, ry) => {
+    row.forEach((val, rx) => {
+      if (!val) return;
+      ctx.fillStyle = C[val];
+      ctx.fillRect(rx * PX, (ry + yShift) * PX, PX, PX);
+    });
+  });
+}
+
+function tick() {
+  frame++;
+
+  // Bob (idle / happy)
+  if (mode === 'idle') {
+    bobOffset = Math.sin(frame * 0.06) * 0.7;
+    clawRaise = 0;
+    workAngle = 0;
+  } else if (mode === 'happy') {
+    bobOffset = Math.sin(frame * 0.15) * 1.5;
+    clawRaise = Math.sin(frame * 0.18) > 0 ? 1 : 0;
+  } else if (mode === 'working') {
+    bobOffset = Math.sin(frame * 0.25) * 0.5;
+    workAngle += 0.15;
+    clawRaise = Math.floor(Math.abs(Math.sin(workAngle)) * 2);
+  }
+
+  // Blink
+  blinkTimer++;
+  if (blinkTimer > 120 && !isBlinking) {
+    isBlinking = true;
+    setTimeout(() => { isBlinking = false; blinkTimer = 0; }, 120);
+  }
+
+  const grid = buildFrame();
+  drawGrid(grid, Math.round(bobOffset));
+}
+
+let animTimer = setInterval(tick, 50);
+
+function setMode(m, duration = 0) {
+  mode = m;
+  if (duration > 0) setTimeout(() => { mode = 'idle'; }, duration);
+}
+
+// ══════════════════════════════════════════════
+//  Drag – use mouse delta to move the window
+// ══════════════════════════════════════════════
+let dragging = false;
+let dragStartX = 0, dragStartY = 0;
+let winStartX = 0, winStartY = 0;
+
+const wrap = document.getElementById('pet-wrap');
+
+wrap.addEventListener('mousedown', async (e) => {
+  if (e.button !== 0) return;
+  dragging = true;
+  dragStartX = e.screenX;
+  dragStartY = e.screenY;
+  const pos = await window.api.getPetPosition();
+  winStartX = pos[0];
+  winStartY = pos[1];
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const dx = e.screenX - dragStartX;
+  const dy = e.screenY - dragStartY;
+  window.api.movePet({ x: winStartX + dx, y: winStartY + dy });
+});
+
+window.addEventListener('mouseup', () => { dragging = false; });
+
+// ══════════════════════════════════════════════
+//  Context menu
+// ══════════════════════════════════════════════
+const menu = document.getElementById('menu');
+let realtimeOn = false;
+
+wrap.addEventListener('click', (e) => {
+  if (dragging) return;
+  const rect = wrap.getBoundingClientRect();
+  menu.style.left = (rect.right + 4) + 'px';
+  menu.style.top = rect.top + 'px';
+  menu.classList.add('visible');
+  e.stopPropagation();
+});
+
+document.addEventListener('click', () => menu.classList.remove('visible'));
+
+document.getElementById('btn-screenshot').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  menu.classList.remove('visible');
+  setMode('working');
+  await window.api.startScreenshot();
+});
+
+document.getElementById('btn-paste').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  menu.classList.remove('visible');
+  setMode('working');
+  await window.api.translateClipboard();
+  setMode('happy', 2000);
+});
+
+document.getElementById('btn-realtime').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  menu.classList.remove('visible');
+  if (!realtimeOn) {
+    await window.api.startRealtime();
+  } else {
+    await window.api.stopRealtime();
+  }
+});
+
+window.api.onRealtimeStatus(({ on }) => {
+  realtimeOn = on;
+  document.getElementById('rt-ico').textContent = on ? '🟢' : '🔴';
+  document.getElementById('realtime-badge').style.display = on ? 'inline' : 'none';
+  if (on) setMode('happy'); else setMode('idle');
+});
+
+// Happy anim after translation result comes in
+window.api.onUpdateTranslation(({ loading }) => {
+  if (!loading) setMode('happy', 3000);
+});
+</script>
+</body>
+</html>

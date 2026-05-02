@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: transparent;
+    cursor: crosshair;
+    user-select: none;
+  }
+  canvas { position: fixed; top: 0; left: 0; }
+  #hint {
+    position: fixed;
+    top: 12px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    font-family: 'Microsoft YaHei', sans-serif;
+    font-size: 13px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+<div id="hint">拖动鼠标框选翻译区域 · 按 ESC 取消</div>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let bgImg = null;
+let selecting = false;
+let sx = 0, sy = 0, ex = 0, ey = 0;
+
+window.api.onSetScreenshot((dataUrl) => {
+  const img = new Image();
+  img.onload = () => {
+    bgImg = img;
+    drawScene();
+  };
+  img.src = dataUrl;
+});
+
+function drawScene() {
+  if (!bgImg) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // draw dimmed screenshot
+  ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (selecting) {
+    const x = Math.min(sx, ex), y = Math.min(sy, ey);
+    const w = Math.abs(ex - sx), h = Math.abs(ey - sy);
+    // clear selection area to show original
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    // border
+    ctx.strokeStyle = '#E8704A';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 3]);
+    ctx.strokeRect(x, y, w, h);
+    // size label
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(232,112,74,0.85)';
+    ctx.fillRect(x, y - 22, 90, 20);
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px monospace';
+    ctx.fillText(`${Math.round(w)} × ${Math.round(h)}`, x + 6, y - 7);
+  }
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  selecting = true;
+  sx = e.clientX; sy = e.clientY;
+  ex = sx; ey = sy;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!selecting) return;
+  ex = e.clientX; ey = e.clientY;
+  drawScene();
+});
+
+canvas.addEventListener('mouseup', async (e) => {
+  if (!selecting) return;
+  selecting = false;
+  ex = e.clientX; ey = e.clientY;
+
+  const x = Math.min(sx, ex), y = Math.min(sy, ey);
+  const w = Math.abs(ex - sx), h = Math.abs(ey - sy);
+
+  // Get the raw screenshot data from the canvas background (actual screen resolution)
+  const bgDataUrl = bgImg ? bgImg.src : null;
+
+  // Scale coordinates to actual screenshot resolution
+  const scaleX = bgImg ? bgImg.naturalWidth / canvas.width : 1;
+  const scaleY = bgImg ? bgImg.naturalHeight / canvas.height : 1;
+
+  await window.api.screenshotSelected({
+    x: x * scaleX,
+    y: y * scaleY,
+    w: w * scaleX,
+    h: h * scaleY,
+    imgData: bgDataUrl,
+  });
+});
+
+document.addEventListener('keydown', async (e) => {
+  if (e.key === 'Escape') {
+    selecting = false;
+    await window.api.cancelScreenshot();
+  }
+});
+</script>
+</body>
+</html>

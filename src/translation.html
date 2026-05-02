@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 440px; min-height: 120px;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  }
+
+  #card {
+    background: rgba(16, 14, 24, 0.90);
+    border: 1px solid rgba(232,112,74,0.35);
+    border-radius: 14px;
+    padding: 14px 16px 12px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+    position: relative;
+    animation: slideIn 0.18s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* title bar / drag area */
+  #titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    cursor: default;
+  }
+  #title-text {
+    font-size: 11px;
+    color: rgba(232,112,74,0.8);
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #title-text .crab-ico { font-size: 14px; }
+  .btn-row { display: flex; gap: 6px; }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .icon-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+  /* content */
+  #content {
+    color: #f0e8e0;
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 40px;
+    max-height: 260px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #content::-webkit-scrollbar { width: 4px; }
+  #content::-webkit-scrollbar-thumb { background: rgba(232,112,74,0.4); border-radius: 2px; }
+
+  /* loading spinner */
+  #loading {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    color: rgba(240,208,192,0.7);
+    font-size: 13px;
+  }
+  #loading.show { display: flex; }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(232,112,74,0.25);
+    border-top-color: #E8704A;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* bottom bar */
+  #bottombar {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    gap: 6px;
+  }
+  .action-btn {
+    background: rgba(232,112,74,0.15);
+    border: 1px solid rgba(232,112,74,0.3);
+    color: #E8704A;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .action-btn:hover { background: rgba(232,112,74,0.3); }
+  .action-btn.copied { color: #4caf50; border-color: #4caf50; }
+</style>
+</head>
+<body>
+<div id="card">
+  <div id="titlebar">
+    <div id="title-text">
+      <span class="crab-ico">🦀</span> Claude 翻译
+    </div>
+    <div class="btn-row">
+      <button class="icon-btn" id="btn-close" title="关闭">✕</button>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <span id="loading-text">正在翻译…</span>
+  </div>
+
+  <div id="content"></div>
+
+  <div id="bottombar">
+    <button class="action-btn" id="btn-copy">复制</button>
+  </div>
+</div>
+
+<script>
+const loading = document.getElementById('loading');
+const content = document.getElementById('content');
+const loadingText = document.getElementById('loading-text');
+const btnCopy = document.getElementById('btn-copy');
+let currentText = '';
+
+window.api.onUpdateTranslation(({ text, loading: isLoading }) => {
+  if (isLoading) {
+    loading.classList.add('show');
+    content.textContent = '';
+    loadingText.textContent = text || '正在翻译…';
+    document.getElementById('bottombar').style.display = 'none';
+  } else {
+    loading.classList.remove('show');
+    content.textContent = text;
+    currentText = text;
+    document.getElementById('bottombar').style.display = 'flex';
+    btnCopy.textContent = '复制';
+    btnCopy.classList.remove('copied');
+  }
+});
+
+document.getElementById('btn-close').addEventListener('click', () => {
+  window.api.closeTranslation();
+});
+
+btnCopy.addEventListener('click', async () => {
+  if (!currentText) return;
+  await window.api.copyTranslation(currentText);
+  btnCopy.textContent = '已复制 ✓';
+  btnCopy.classList.add('copied');
+  setTimeout(() => {
+    btnCopy.textContent = '复制';
+    btnCopy.classList.remove('copied');
+  }, 1800);
+});
+</script>
+</body>
+</html>

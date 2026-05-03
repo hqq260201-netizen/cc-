@@ -227,18 +227,36 @@ wrap.addEventListener('mousedown', async (e) => {
 window.addEventListener('mousemove', (e) => {
   if (!dragging) return;
   const dx = e.screenX - dragStartX, dy = e.screenY - dragStartY;
-  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+  if (!moved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+    moved = true;
+    setMode('carrying', 0, true);
+  }
   window.api.movePet({ x: winStartX + dx, y: winStartY + dy });
 });
 
-window.addEventListener('mouseup', () => { dragging = false; });
+window.addEventListener('mouseup', () => {
+  if (dragging && moved) {
+    setTimeout(() => { if (currentMode === 'carrying') setMode('idle', 0, true); }, 300);
+  }
+  dragging = false;
+});
 
 // ── Context menu ─────────────────────────────────────────────────────────
 const menu = document.getElementById('menu');
 let realtimeOn = false;
+let lastClickTime = 0;
 
 wrap.addEventListener('click', (e) => {
   if (moved) { moved = false; return; }
+  const now = Date.now();
+  if (now - lastClickTime < 350) {
+    // Double-click → juggling
+    lastClickTime = 0;
+    menu.classList.remove('visible');
+    setMode('juggling', 3000, true);
+    return;
+  }
+  lastClickTime = now;
   menu.style.left = '124px';
   menu.style.top = '10px';
   menu.classList.toggle('visible');

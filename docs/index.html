@@ -294,17 +294,36 @@ pet.addEventListener('pointerdown', (e) => {
 document.addEventListener('pointermove', (e) => {
   if (!dragging) return;
   const dx = e.clientX - sx, dy = e.clientY - sy;
-  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+  if (!moved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+    moved = true;
+    setMode('carrying', 0, true);
+  }
   pet.style.left = (px + dx) + 'px';
   pet.style.top = (py + dy) + 'px';
 });
 
-document.addEventListener('pointerup', () => { dragging = false; });
+document.addEventListener('pointerup', () => {
+  if (dragging && moved) {
+    setTimeout(() => { if (currentMode === 'carrying') setMode('idle', 0, true); }, 300);
+  }
+  dragging = false;
+});
 
 // ── Context menu ──
 const menu = document.getElementById('menu');
+let lastClickTime = 0;
+
 pet.addEventListener('click', (e) => {
   if (moved) { moved = false; return; }
+  const now = Date.now();
+  if (now - lastClickTime < 350) {
+    // Double-click → juggling
+    lastClickTime = 0;
+    menu.classList.remove('show');
+    setMode('juggling', 3000, true);
+    return;
+  }
+  lastClickTime = now;
   const r = pet.getBoundingClientRect();
   menu.style.left = (r.right + 4) + 'px';
   menu.style.top = r.top + 'px';

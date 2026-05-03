@@ -24,11 +24,13 @@ let isTyping = false;
 let isSleeping = false;
 const TYPING_STOP_MS = 2000;       // return to idle after 2s no keypress
 const SLEEP_IDLE_MS  = 30 * 1000;  // sleep after 30s no input
+let wheelThrottle = false;
 
 function onKeyActivity() {
   if (isSleeping) {
     isSleeping = false;
-    sendPetMode('idle');
+    sendPetMode('jump');
+    setTimeout(() => { if (!isSleeping) sendPetMode('idle'); }, 800);
   }
   // Reset sleep timer
   clearTimeout(sleepTimer);
@@ -47,6 +49,16 @@ function onKeyActivity() {
     isTyping = false;
     if (!isSleeping) sendPetMode('idle');
   }, TYPING_STOP_MS);
+}
+
+function onWheelActivity() {
+  if (wheelThrottle || isSleeping) return;
+  wheelThrottle = true;
+  sendPetMode('conducting');
+  setTimeout(() => {
+    wheelThrottle = false;
+    if (!isTyping && !isSleeping) sendPetMode('idle');
+  }, 1500);
 }
 
 function sendPetMode(mode) {
@@ -213,7 +225,11 @@ ipcMain.handle('screenshot-selected', async (_, { x, y, w, h, imgData }) => {
   }
 });
 
-ipcMain.handle('cancel-screenshot', () => { screenshotWindow.hide(); });
+ipcMain.handle('cancel-screenshot', () => {
+  screenshotWindow.hide();
+  sendPetMode('annoyed');
+  setTimeout(() => sendPetMode('idle'), 2500);
+});
 
 ipcMain.handle('translate-clipboard', async () => {
   const text = clipboard.readText().trim();
@@ -256,7 +272,11 @@ ipcMain.handle('stop-realtime', () => {
   return { status: 'stopped' };
 });
 
-ipcMain.handle('close-translation', () => translationWindow.hide());
+ipcMain.handle('close-translation', () => {
+  translationWindow.hide();
+  sendPetMode('sweeping');
+  setTimeout(() => sendPetMode('idle'), 2500);
+});
 
 ipcMain.handle('copy-translation', (_, text) => clipboard.writeText(text));
 
@@ -278,6 +298,7 @@ app.whenReady().then(() => {
   try {
     uIOhook.on('keydown', onKeyActivity);
     uIOhook.on('mouseclick', onKeyActivity);
+    uIOhook.on('wheel', onWheelActivity);
     uIOhook.start();
   } catch (e) {
     console.warn('uIOhook failed to start:', e.message);

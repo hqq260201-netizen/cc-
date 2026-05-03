@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Clawd 螃蟹桌宠</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: transparent; overflow: hidden; font-family: 'Microsoft YaHei', sans-serif; height: 100vh; width: 100vw; }
+
+  /* ── Pet ── */
+  #pet {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 110px; height: 110px;
+    cursor: grab;
+    z-index: 1000;
+    image-rendering: pixelated;
+    transition: transform 0.15s;
+  }
+  #pet:active { cursor: grabbing; }
+  #pet.waving { animation: wave 0.4s ease-in-out infinite alternate; }
+  #pet.dancing { animation: dance 0.5s ease-in-out infinite; }
+  #pet.excited { animation: excited 0.25s ease-in-out infinite alternate; }
+
+  @keyframes wave {
+    0% { transform: rotate(-12deg) translateY(0); }
+    100% { transform: rotate(12deg) translateY(-4px); }
+  }
+  @keyframes dance {
+    0%,100% { transform: translateY(0) rotate(0deg) scale(1); }
+    25% { transform: translateY(-8px) rotate(-8deg) scale(1.08); }
+    50% { transform: translateY(0) rotate(0deg) scale(1); }
+    75% { transform: translateY(-6px) rotate(8deg) scale(1.06); }
+  }
+  @keyframes excited {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-10px) scale(1.12); }
+  }
+
+  /* ── Context menu ── */
+  #menu {
+    display: none;
+    position: fixed;
+    background: rgba(18,14,26,0.95);
+    border: 1px solid rgba(218,119,86,0.5);
+    border-radius: 12px;
+    padding: 6px 0;
+    min-width: 148px;
+    z-index: 9999;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+    animation: popIn 0.14s ease;
+  }
+  #menu.show { display: block; }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.82); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .menu-item {
+    padding: 10px 18px;
+    color: #f2d8cc;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: background 0.12s;
+  }
+  .menu-item:hover { background: rgba(218,119,86,0.25); color: #fff; }
+  .menu-item .ico { font-size: 16px; width: 20px; text-align: center; }
+  .menu-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 3px 0; }
+
+  #realtime-badge {
+    font-size: 10px; background: #4caf50; color: #fff;
+    border-radius: 4px; padding: 1px 5px; display: none;
+  }
+
+  /* ── Translation popup ── */
+  #popup {
+    display: none;
+    position: fixed;
+    top: 10px; right: 10px;
+    max-width: 380px; width: calc(100vw - 20px);
+    background: rgba(16,14,24,0.94);
+    border: 1px solid rgba(232,112,74,0.35);
+    border-radius: 14px;
+    padding: 14px 16px 12px;
+    z-index: 9998;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    animation: slideIn 0.18s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #popup-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; color: rgba(232,112,74,0.8); font-size: 12px; font-weight: 600;
+  }
+  #popup-close {
+    background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
+    font-size: 16px; padding: 2px 6px; border-radius: 4px;
+  }
+  #popup-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  #popup-content {
+    color: #f0e8e0; font-size: 14px; line-height: 1.7;
+    max-height: 250px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;
+  }
+  #popup-loading { display: none; color: rgba(240,208,192,0.7); font-size: 13px; align-items: center; gap: 8px; }
+  #popup-loading.show { display: flex; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(232,112,74,0.25);
+    border-top-color: #E8704A;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #popup-btns { display: flex; justify-content: flex-end; margin-top: 10px; gap: 6px; }
+  #popup-btns button {
+    background: rgba(232,112,74,0.15);
+    border: 1px solid rgba(232,112,74,0.3);
+    color: #E8704A; font-size: 12px;
+    padding: 4px 12px; border-radius: 6px; cursor: pointer;
+  }
+  #popup-btns button:hover { background: rgba(232,112,74,0.3); }
+  #popup-btns button.copied { color: #4caf50; border-color: #4caf50; }
+
+  /* ── Text input modal ── */
+  #input-modal {
+    display: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 10000;
+    justify-content: center; align-items: center;
+  }
+  #input-modal.show { display: flex; }
+  #input-box {
+    background: rgba(18,14,26,0.97); border: 1px solid rgba(232,112,74,0.4);
+    border-radius: 14px; padding: 20px; width: 90%; max-width: 420px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  }
+  #input-box h3 { color: #E8704A; font-size: 15px; margin-bottom: 12px; }
+  #input-box textarea {
+    width: 100%; height: 100px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    color: #f0e8e0; font-size: 14px; padding: 10px; resize: vertical;
+    font-family: inherit;
+  }
+  #input-box textarea:focus { outline: none; border-color: rgba(232,112,74,0.5); }
+  #input-box .btn-row {
+    display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;
+  }
+  #input-box button {
+    background: rgba(232,112,74,0.2); border: 1px solid rgba(232,112,74,0.4);
+    color: #E8704A; font-size: 13px; padding: 6px 16px; border-radius: 8px; cursor: pointer;
+  }
+  #input-box button.primary { background: rgba(232,112,74,0.5); color: #fff; }
+  #input-box button:hover { background: rgba(232,112,74,0.4); }
+
+  /* ── Direction badge ── */
+  #dir-badge {
+    position: fixed; bottom: 10px; right: 10px;
+    background: rgba(18,14,26,0.8); color: rgba(255,255,255,0.5);
+    font-size: 11px; padding: 4px 10px; border-radius: 10px; z-index: 500;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<img id="pet" src="https://raw.githubusercontent.com/rullerzhou-afk/clawd-on-desk/main/assets/gif/clawd-idle.gif" draggable="false" alt="Clawd">
+
+<!-- Context menu -->
+<div id="menu">
+  <div class="menu-item" data-action="paste">
+    <span class="ico">📋</span> 粘贴翻译
+  </div>
+  <div class="menu-item" data-action="input">
+    <span class="ico">⌨️</span> 输入翻译
+  </div>
+  <div class="menu-sep"></div>
+  <div class="menu-item" data-action="direction">
+    <span class="ico">🔤</span> <span id="dir-label">英→中</span>
+  </div>
+</div>
+
+<!-- Translation popup -->
+<div id="popup">
+  <div id="popup-header">
+    <span>🦀 翻译结果</span>
+    <button id="popup-close">✕</button>
+  </div>
+  <div id="popup-loading"><div class="spinner"></div><span>正在翻译…</span></div>
+  <div id="popup-content"></div>
+  <div id="popup-btns">
+    <button id="popup-copy">复制</button>
+  </div>
+</div>
+
+<!-- Text input modal -->
+<div id="input-modal">
+  <div id="input-box">
+    <h3>输入文字翻译</h3>
+    <textarea id="input-text" placeholder="输入要翻译的文字…"></textarea>
+    <div class="btn-row">
+      <button id="input-cancel">取消</button>
+      <button class="primary" id="input-go">翻译</button>
+    </div>
+  </div>
+</div>
+
+<div id="dir-badge">🦀 Clawd · <span id="badge-label">英→中</span></div>
+
+<script>
+// ── GIF paths (from GitHub CDN) ──
+const BASE = 'https://raw.githubusercontent.com/rullerzhou-afk/clawd-on-desk/main/assets/gif';
+const GIFS = {
+  idle:       `${BASE}/clawd-idle.gif`,
+  working:    `${BASE}/clawd-building.gif`,
+  thinking:   `${BASE}/clawd-thinking.gif`,
+  typing:     `${BASE}/clawd-typing.gif`,
+  sleeping:   `${BASE}/clawd-sleeping.gif`,
+  happy:      `${BASE}/clawd-happy.gif`,
+  sweeping:   `${BASE}/clawd-sweeping.gif`,
+  reading:    `${BASE}/clawd-idle-reading.gif`,
+  juggling:   `${BASE}/clawd-juggling.gif`,
+  error:      `${BASE}/clawd-error.gif`,
+  alert:      `${BASE}/clawd-mini-alert.gif`,
+  jump:       `${BASE}/clawd-react-double-jump.gif`,
+  annoyed:    `${BASE}/clawd-react-annoyed.gif`,
+  carrying:   `${BASE}/clawd-carrying.gif`,
+  conducting: `${BASE}/clawd-conducting.gif`,
+  debugger:   `${BASE}/clawd-debugger.gif`,
+  notice:     `${BASE}/clawd-notification.gif`,
+};
+
+const CSS_MODES = ['waving', 'dancing', 'excited'];
+const IDLE_VARIANTS = ['idle', 'reading', 'sweeping', 'juggling'];
+const PRIORITY = { working:5, thinking:4, happy:3, jump:3.5, waving:2.5, dancing:2.5, excited:2.5, typing:2, idle:1, sleeping:0 };
+
+let currentMode = 'idle';
+let modeTimer = null;
+let idleVariantTimer = null;
+let isZh2En = false;
+
+const pet = document.getElementById('pet');
+
+function setMode(m, duration = 0, force = false) {
+  if (!force && (PRIORITY[m] || 0) < (PRIORITY[currentMode] || 0) && duration === 0) return;
+  currentMode = m;
+
+  if (IDLE_VARIANTS.includes(m) || m === 'sleeping') {
+    if (!idleVariantTimer) startIdleVariants();
+  } else {
+    clearInterval(idleVariantTimer); idleVariantTimer = null;
+  }
+
+  pet.classList.remove(...CSS_MODES);
+  if (CSS_MODES.includes(m)) {
+    pet.src = GIFS.idle + '?t=' + Date.now();
+    pet.classList.add(m);
+  } else {
+    pet.src = (GIFS[m] || GIFS.idle) + '?t=' + Date.now();
+  }
+
+  clearTimeout(modeTimer); modeTimer = null;
+  if (duration > 0) modeTimer = setTimeout(() => setMode('idle'), duration);
+}
+
+function startIdleVariants() {
+  clearInterval(idleVariantTimer);
+  idleVariantTimer = setInterval(() => {
+    if (IDLE_VARIANTS.includes(currentMode) || currentMode === 'sleeping') {
+      const pool = IDLE_VARIANTS.filter(v => v !== currentMode);
+      setMode(pool[Math.floor(Math.random() * pool.length)], 0, true);
+    }
+  }, 25000);
+}
+startIdleVariants();
+
+// ── Drag (desktop + touch) ──
+let dragging = false, moved = false, sx = 0, sy = 0, px = 0, py = 0;
+
+pet.addEventListener('pointerdown', (e) => {
+  dragging = true; moved = false;
+  sx = e.clientX; sy = e.clientY;
+  px = pet.offsetLeft; py = pet.offsetTop;
+  pet.setPointerCapture(e.pointerId);
+});
+
+document.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - sx, dy = e.clientY - sy;
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+  pet.style.left = (px + dx) + 'px';
+  pet.style.top = (py + dy) + 'px';
+});
+
+document.addEventListener('pointerup', () => { dragging = false; });
+
+// ── Context menu ──
+const menu = document.getElementById('menu');
+pet.addEventListener('click', (e) => {
+  if (moved) { moved = false; return; }
+  const r = pet.getBoundingClientRect();
+  menu.style.left = (r.right + 4) + 'px';
+  menu.style.top = r.top + 'px';
+  if (menu.style.left.replace('px','') > window.innerWidth - 160) {
+    menu.style.left = (r.left - 162) + 'px';
+  }
+  menu.classList.toggle('show');
+  e.stopPropagation();
+});
+document.addEventListener('click', () => menu.classList.remove('show'));
+document.addEventListener('touchend', (e) => {
+  if (!e.target.closest('#menu')) menu.classList.remove('show');
+});
+
+// ── Qwen API ──
+const QWEN_KEY = 'sk-a911b5d2dab44dccb01d168083ed8100';
+
+async function translate(text) {
+  const sys = isZh2En
+    ? '你是专业翻译助手，请将用户输入的中文翻译成英文，只返回翻译结果。'
+    : '你是专业翻译助手，请将用户输入的英文翻译成中文，只返回翻译结果。';
+  const res = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${QWEN_KEY}` },
+    body: JSON.stringify({
+      model: 'qwen-plus',
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: text }],
+    }),
+  });
+  const data = await res.json();
+  return data.choices[0].message.content.trim();
+}
+
+// ── Popup ──
+const popup = document.getElementById('popup');
+const popupContent = document.getElementById('popup-content');
+const popupLoading = document.getElementById('popup-loading');
+const popupBtns = document.getElementById('popup-btns');
+const popupCopy = document.getElementById('popup-copy');
+let lastResult = '';
+
+function showPopup(text, loading = false) {
+  if (loading) {
+    popupLoading.classList.add('show');
+    popupContent.textContent = '';
+    popupBtns.style.display = 'none';
+  } else {
+    popupLoading.classList.remove('show');
+    popupContent.textContent = text;
+    lastResult = text;
+    popupBtns.style.display = 'flex';
+    popupCopy.textContent = '复制';
+    popupCopy.classList.remove('copied');
+  }
+  popup.style.display = 'block';
+}
+document.getElementById('popup-close').addEventListener('click', () => { popup.style.display = 'none'; });
+popupCopy.addEventListener('click', async () => {
+  if (!lastResult) return;
+  try {
+    await navigator.clipboard.writeText(lastResult);
+    popupCopy.textContent = '已复制 ✓';
+    popupCopy.classList.add('copied');
+    setTimeout(() => { popupCopy.textContent = '复制'; popupCopy.classList.remove('copied'); }, 1800);
+  } catch {
+    // Fallback for non-HTTPS
+    const ta = document.createElement('textarea');
+    ta.value = lastResult; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    popupCopy.textContent = '已复制 ✓';
+    popupCopy.classList.add('copied');
+  }
+});
+
+// ── Menu actions ──
+document.querySelector('[data-action="paste"]').addEventListener('click', async (e) => {
+  e.stopPropagation(); menu.classList.remove('show');
+  setMode('thinking');
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text.trim()) {
+      setMode('alert', 2000);
+      showPopup('剪贴板为空');
+      return;
+    }
+    showPopup('正在翻译…', true);
+    const result = await translate(text);
+    setMode('jump'); setTimeout(() => setMode('happy', 2000), 600);
+    showPopup(result);
+  } catch (e) {
+    setMode('error'); setTimeout(() => setMode('idle'), 3000);
+    showPopup('翻译失败：' + e.message);
+  }
+});
+
+document.querySelector('[data-action="input"]').addEventListener('click', (e) => {
+  e.stopPropagation(); menu.classList.remove('show');
+  document.getElementById('input-modal').classList.add('show');
+  document.getElementById('input-text').focus();
+});
+
+document.querySelector('[data-action="direction"]').addEventListener('click', (e) => {
+  e.stopPropagation(); menu.classList.remove('show');
+  isZh2En = !isZh2En;
+  const label = isZh2En ? '中→英' : '英→中';
+  document.getElementById('dir-label').textContent = label;
+  document.getElementById('badge-label').textContent = label;
+});
+
+// ── Input modal ──
+document.getElementById('input-cancel').addEventListener('click', () => {
+  document.getElementById('input-modal').classList.remove('show');
+});
+document.getElementById('input-go').addEventListener('click', async () => {
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) return;
+  document.getElementById('input-modal').classList.remove('show');
+  document.getElementById('input-text').value = '';
+  setMode('thinking');
+  showPopup('正在翻译…', true);
+  try {
+    const result = await translate(text);
+    setMode('jump'); setTimeout(() => setMode('happy', 2000), 600);
+    showPopup(result);
+  } catch (e) {
+    setMode('error'); setTimeout(() => setMode('idle'), 3000);
+    showPopup('翻译失败：' + e.message);
+  }
+});
+
+// ── Wake on idle touch ──
+let sleepTimer = null;
+function resetSleep() {
+  if (currentMode === 'sleeping') setMode('idle', 0, true);
+  clearTimeout(sleepTimer);
+  sleepTimer = setTimeout(() => setMode('sleeping', 0, true), 30000);
+}
+['click', 'touchstart', 'keydown'].forEach(ev => document.addEventListener(ev, resetSleep));
+resetSleep();
+</script>
+</body>
+</html>

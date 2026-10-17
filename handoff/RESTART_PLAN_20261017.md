@@ -1,178 +1,197 @@
-# C-Memory 重新出发计划（Claude 制定，2026-10-17 18:10 CST）
+# C-Memory 重新出发计划 v2（Claude 制定，2026-10-17 19:30 CST）
 
 > 本文件是**现行计划**。`PLAN.md`（§1–168）降级为施工记录，只用来查已核实的事实和可复用代码，不再作为设计依据。
 > 执行者：ChatGPT。拍板人：琪琪。计划修订：Claude。
-> 位置：`/srv/ctd-memory-lab/project/memory-v2-20261008/RESTART_PLAN_20261017.md`
+> v2 相对 v1 的改动：把"阅后即焚"恢复为正式目标（v1 错把它写成可选）；纠正了 v1 关于"焚比留更贵"的错误判断；架构改成"插件只负责递送，Python 负责找记忆"。
 
 ---
 
 ## 给琪琪的话
 
-现在程亭渡**仍然一条自动记忆都收不到**。下午那个 bug 修好了，但 ChatGPT 随后又加了一道开关，旧召回在开始找记忆之前就直接退出，连后台都没在算。它报告的两个"真实回执"，我查下来很可能是测试误写进生产目录的。
+现在程亭渡**仍然一条自动记忆都收不到**。
 
-新计划只有一个思路：**先把旧的召回原样接回来，再让新系统补上旧系统漏掉的。** 两者走同一个入口：改动当场生效，删一个文件当场撤回，也不需要重启程亭渡。
+新计划：**旧的召回 + 新的补漏，都走"每轮临时提醒"这个位置递给他。** 递出去的东西只在那一轮出现，下一轮自动没有，不进聊天记录，也不碰缓存。也就是你要的"阅后即焚"。
 
-有一件事需要你决定（见 D1）：想起的那段小卡片，是"留在聊天记录里"，还是"用完就消失"。我建议先留着。
+我已经查过：程亭渡今天的 96 条消息里，95 条都带有这个位置。参考仓库的实测也表明，内容放在这里只花它自己那几十个 token，不会弄坏缓存。
 
 ---
 
-## 0. 先纠正的事实（2026-10-17 17:49 只读核对）
+## 0. 已核实的事实
 
 **E1. 旧召回现在仍是 0，后台也没在算。**
-- `cache_safe_recall.py` 第 137 行：开关 `/run/c-memory-v2/legacy-retained-recall-output-on` 不存在时，会**在调用 `memory_trigger_new.py` 之前**就 `return ''`。
-- 实际证据：`gate-audit.jsonl` 共 16 行，全部是 `legacy_retained_disabled`；`logs/recall-hook.jsonl` 最后一条仍是 10/14 19:33。
-- 关这道门的理由是"防止缓存倒退"，这个理由不成立。**只追加不会破坏前缀缓存；改写旧历史才会。** 10/14 的缓存爆炸来自 `prune-stale-context-v2.py` 和 `_clear_previous` 的历史改写（见 `ephemeral-v3/README.md`），不是因为卡片留在了历史里。
+- `cache_safe_recall.py` 第 137 行：开关 `legacy-retained-recall-output-on` 不存在时，它在调用 `memory_trigger_new.py` **之前**就 `return ''`。
+- 证据：`gate-audit.jsonl` 16 行全是 `legacy_retained_disabled`；`logs/recall-hook.jsonl` 最后一条仍是 10/14 19:33。
 
 **E2. STATUS.md 里两条"真实宿主回执"不能算数。**
-- 正式进程 PID 2314153（10/17 01:01 启动）的 inotify 只监视 5 个对象：`~/.claude/settings.json`、`cc-selfhost/.claude/settings.json`、`settings.local.json`，以及两个 `.claude` 目录。**它没有监视 `mods/ctd-roof-names/`**。所以 2.1.296 的正式进程不会热重载 mod，01:01 之后对 JS 的所有修改都没进入程亭渡正在运行的会话。
-- `p4-loaded-build.json` 写于 17:15:40.42：补丁落盘是 17:15:28，隔离四轮测试在 17:16:47 结束，回执正好落在测试期间。和 14:50 那次一样，极可能是测试写进了生产路径。
-- `p4-native-slot-census.json`（150 次）写于 14:53:41，落在 14:46–14:53 的隔离测试窗口内，而写它的 `register.js` 代码正式进程从未载入。理由同上。
-- 结论：**生产环境里从未观测到 `total_tokens_reminder` 槽位。** 正式进程运行的是 10/16 21:46（§159）版的 JS：每进程一张卡，只认字面锚点规则。
+- 正式进程 PID 2314153（10/17 01:01 启动）的 inotify 只监视 settings 文件和 `.claude` 目录，**没有监视 `mods/`**。所以 2.1.296 正式进程不会热重载 mod，01:01 之后对 JS 的修改都没有生效。
+- `p4-loaded-build.json`（17:15:40）和 `p4-native-slot-census.json`（14:53:41）的写入时间，都落在隔离测试的运行窗口里，极可能是测试误写进了生产路径。
+- 正式进程实际运行的是 10/16 21:46（§159）版的 JS。
 
-**E3. 反过来，有两条通道是即时生效的。**
-- `settings.json` 被监视，所以 `UserPromptSubmit` 配置的改动会立刻生效。14:57 出现的第一条 gate-audit 就是证明。
-- wrapper 和 P4 adapter 都是每轮新起的 Python 进程，改完代码下一条消息就会用上。**本计划只走这两条通道。**
+**E3. 能即时生效的通道。**
+- `settings.json` 被监视：改了 `UserPromptSubmit` 配置立刻生效。
+- 每轮新起的 Python 进程（wrapper，以及 mod 通过 `$.process.run` 调用的脚本）改完即生效。
+- `/run/c-memory-v2/*` 开关文件是每轮实时检查的，所以开关即时生效。
+- **只有 mod 的 JS 本身**要等下一次进程启动（每天 01:00 自然切窗）才会载入。
 
-**E4. 10/14 19:37 清空 `UserPromptSubmit` 时，一起被关掉的还有：**`thinking.md` 每轮注入、`lightbulb`、`media_trigger.py`、`tracking_trigger.py`、`album_reminder.py`、`clawd-hook`。相册、媒体、追踪这几项提醒至今都是关着的（另议，见 §6）。
+**E4. 10/14 19:37 关掉 `UserPromptSubmit` 时，一起被关掉的还有：**`thinking.md`、`lightbulb`、`media_trigger`、`tracking_trigger`、`album_reminder`、`clawd-hook`（另议）。
 
-**E5. 今晚 01:00 自然切窗时**，正式进程会一次性载入今天全部 JS 改动：不限张数、dual-rank、tiebreak、census、loaded-build。这些都没有经过生产验证。Step 0 会让它们保持不活动。
+**E5. 今晚 01:00 会一次性载入今天全部未经验证的 JS 改动**（见 Step 0）。
+
+**E6（新，19:20 核对）：每轮临时提醒的位置在生产中存在，而且几乎每轮都有。**
+- 当前 session `22a06f96…jsonl`：96 条普通用户消息里，95 条附近有 `total_tokens_reminder` 附件；另有 67 次出现在工具结果之后。内容是固定文本 `<total_tokens>15000000 tokens left</total_tokens>`。
+- 参考 `lllq-123/claude-code-ephemeral-reminders`（2.1.258 实测）：这类每次请求临时拼进去的提醒插在**缓存断点之后**，只花它自己的 token，`cache_read` 一格不掉；真实历史只记一条渲染为空的记账条目。
+- 参考 `lllq-123/claude-code-cache-keepalive`：2.1.258 的 `totalTokensReminder` 在尾部追加动态内容，官方路由下没有每轮击穿缓存；而**改写历史的会话，下一轮必定 miss**。
+- **因此 v1 说"焚可能比留更贵"是错的。** 前提是卡片位于缓存断点之后，这一点要在 2.1.296 上用 Step 2 复验。
+- ChatGPT 已经做过的原生宿主加假模型四轮测试（卡片 A/空/B/空，JSONL 无 marker，system 哈希不变），恰好证明了这条通道在 2.1.296 上可行。**它缺的不是通道，而是通道里没有东西可递**：Gate 太严，又是每进程一张。
+
+**E7（另议）：缓存的其他漏点。** 当前 session 有 18 条 `deferred_tools_record` 和 1 条 `deferred_tools_delta`。按 cache-keepalive 的结论，工具表中途变化会让缓存整份重建。这和记忆无关，记录下来以后处理。
 
 ---
 
-## 1. 目标（回到琪琪最初的要求）
+## 1. 目标（琪琪的原始要求）
 
 | # | 目标 | 可测量的定义 |
 |---|---|---|
-| G1 | 保留旧召回能力 | 自然聊天中带出记忆的频率回到 10/12–14 的水平：每 100 条消息 3–7 次，每天 4–15 次 |
-| G2 | 新系统补上旧系统想不起的 | 记录"旧系统没找到、V2 找到且来源可核验"的轮次，经琪琪看样例认可后投递 |
-| G3 | 每轮都判断，不拖慢对话 | 整个 Hook 增加的延迟 p95 ≤ 1.5 s；硬超时 3 s，超时就当作没找到 |
-| G4 | 不破坏缓存 | 永不改写已发送的历史；具体指标见 §4 |
-| G5 | 每一层都看得见 | 每轮每层写一行**不含正文**的日志：ran / empty / delivered / error / elapsed_ms |
-
-**D1（琪琪决定）：想起的小卡片留在历史里，还是"阅后即焚"？**
-- **留（推荐）**：只追加，缓存安全，已有几个月的实际使用经验。预算是自然联想 ≤1200 字、明确回忆 ≤7000 字，同一话题去重。代价是占一点上下文；按缓存读价算，每张卡每轮约几十 token。
-- **焚**：卡片下一轮消失。但这会让缓存从卡片所在位置往后整段重建，一次可能几千 token。它依赖的宿主槽位在生产里还没见过，要等 Step 6 才能做。
-- D1 只影响 Step 2 和 Step 4 能不能开。Step 0、1、3 不受影响，可以先做。
+| G1 | 保留旧召回能力 | 带出记忆的频率回到 10/12–14 的水平：每 100 条消息 3–7 次，每天 4–15 次 |
+| G2 | 新系统补上旧系统想不起的 | 旧系统没找到、V2 找到且来源可核验的轮次，经琪琪看过样例并认可后才投递 |
+| G3 | 每轮都判断，不拖慢对话 | 找记忆增加的延迟 p95 ≤ 1.5 s；超时就当作没找到 |
+| G4 | 阅后即焚 + 不破坏缓存 | 卡片只出现在当前这次请求里；下一轮请求不带；JSONL 里没有卡片正文；**永不改写已发送的历史** |
+| G5 | 每一层都看得见 | 每轮写一行路由日志（不含正文）：找了没有、找到什么 id、出或不出的原因、耗时 |
 
 ---
 
-## 2. 架构：一个入口，两路检索
+## 2. 架构：插件只负责递送，Python 负责找
 
 ```
 琪琪的消息
-  → UserPromptSubmit → cache_safe_recall.py（唯一入口，每轮都跑）
-       ├─ 旧召回 memory_trigger_new.py   （子进程，python3 3.6，已有）
-       ├─ V2   passive_live_single.py    （子进程，/usr/bin/python3.11，并行，超时 2.0 s）
-       └─ 合并：每轮最多 1 块
-              旧召回有结果 → 用旧召回
-              旧召回为空、V2 ready → 用 V2
-              同一 session 内按 memory/source id 去重（复用 reduce_output 的 seen 状态）
-  → 只追加进本轮（D1=留）
+  → Roof mod  prompt.submit
+        └─ $.process.run → recall_router.py（Python 3.11，每轮新起进程，改完即生效）
+               ├─ 旧召回 memory_trigger_new.py（子进程，python3 3.6）
+               ├─ V2     passive_live_single.py（并行）
+               └─ 合并：每轮最多 1 块；旧召回优先；旧召回为空且 V2 ready 才用 V2
+                         同 session 按 id 去重；已在上下文里的跳过
+                  输出 {state, context, ids, turn_key, route_log}
+  → Roof mod  prompt.attachment：把 context 接在 total_tokens_reminder 后面（只这一次请求）
+  → Roof mod  turn.complete：$.ui.invalidate('prompt.attachment')，清空
 ```
 
-- Roof mod 的 P4 engine 通道保持**关闭**。代码保留，到 Step 6 再评估。
-- 为什么这样设计：改动立即生效；删一个开关文件立即回退；只追加，缓存安全；不依赖未经验证的宿主槽位；不需要重启程亭渡。
+- **JS 只是"快递员"**：校验格式、轮次绑定、每轮 ≤1、id 去重，然后递送和清空。找什么、出不出，全由 Python 决定。以后调整召回逻辑只改 Python，不必再等切窗。
+- `UserPromptSubmit` wrapper 不再往模型输出任何东西，只在 Step 1 期间用来做影子测量。
+- **同一时刻只能有一个调用方**运行 `memory_trigger_new.py`：Step 1 由 wrapper 调用，Step 3 起只由 router 调用。否则它的副作用（审计、话题状态、P4 队列）会重复。
 
 ---
 
 ## 3. 施工步骤（严格按顺序，一步一报）
 
 ### Step 0：止损（今天 01:00 之前）
-1. 把下面三个开关改名，不删除，名字后加 `-off-restart-20261017`：
+1. 把下面三个开关改名为 `*-off-restart-20261017`，让今晚载入的 JS 保持不活动：
    `p4-engine-reminder-canary-on`、`p4-dual-rank-safe-canary-on`、`p4-semantic-tiebreak-canary-on`。
-   `p4-topic-cursor-shadow-on` 保留（它只做观察）。
-2. 把 `/run/c-memory-v2/p4-loaded-build.json` 和 `p4-native-slot-census.json` 移到 `recovery-20261017/synthetic-receipts/suspect-1715/`。
-3. 测试隔离硬闸：所有测试和 fixture 在运行前，先 grep 自身及其拷贝的插件代码；只要出现 `/run/c-memory-v2` 或 `/root/cc-selfhost` 的写路径就拒绝运行。
-4. 回执规范：以后所有"生产回执"必须带 `pid` 和 `session_id` 的哈希。`check_status.py` 要校验 pid 等于当前正式 `claude` 进程，不等就标为 synthetic。
-5. 按 E1、E2 改正 STATUS.md。
+2. 把两个可疑回执移到 `recovery-20261017/synthetic-receipts/suspect-1715/`。
+3. 测试隔离硬闸：任何测试或 fixture 只要含有 `/run/c-memory-v2` 或 `/root/cc-selfhost` 的写路径，就拒绝运行。
+4. 所有生产回执必须带 `pid` 和 `session_id` 哈希；`check_status.py` 校验 pid 是否等于当前正式 `claude` 进程。
+5. 按 E1、E2、E6 改正 STATUS.md。
 
-**PASS**：`ls /run/c-memory-v2` 中不再有那三个 `-on`；STATUS.md 已改正；10/18 01:00 切窗后不存在 `p4-engine-reminder-attachment-last.json`。
+**PASS**：三个 `-on` 已不存在；10/18 01:00 之后没有 `p4-engine-reminder-attachment-last.json`。
 
-### Step 1：旧召回影子运行（立即生效，不投递）
-- 修改 `cache_safe_recall.py`：开关缺席时**照常调用** `memory_trigger_new.py`，照常跑 `reduce_output`，然后只写审计、返回空。审计行格式：`{event:'legacy_shadow', would_chars, ids_sha, elapsed_ms}`。
-- 给 gate-audit 路径加一个环境变量覆盖（`CTD_GATE_AUDIT_LOG`），用于冒烟测试。先列出 `memory_trigger_new.py` 的全部写入点：recall-hook 审计、状态文件、P4 shadow 队列。每个写入点都要有覆盖变量或可以关掉，冒烟时全部指向临时目录。
-- 冒烟方法：`env -i PATH=<正式进程的 PATH> HOME=/root python3 cache_safe_recall.py < 合成payload`，session_id 用假的。
+### Step 1：recall_router.py + 影子运行（即时生效，不投递）
+- 新写 `recall_router.py`：并行调用旧召回和 V2，按 §2 合并，输出上面的 JSON。给每个写入点都加环境变量覆盖，冒烟测试时全部指向临时目录。
+- `cache_safe_recall.py` 在开关缺席时改为调用 `recall_router.py`，只写路由日志，返回空。
+- **测试与生产用同一份 router 代码**（"调的就是线上跑的"）。
 
 **PASS**（≥30 条真实消息或 6 小时后）：
-- `recall-hook.jsonl` 重新出现当天记录；
-- would_deliver 的比例落在每 100 条 3–7 次；
-- 整个 wrapper 的 elapsed p95 ≤ 1.5 s；
-- error 为 0。
+- 旧召回 would-deliver 的比例落在每 100 条 3–7 次；
+- elapsed p95 ≤ 1.5 s；
+- error 为 0；
+- 记下"旧召回为空但 V2 ready"的次数，留给 Step 4 用。
 
-任何一项 FAIL：停下，报告，不要自己调参。
+### Step 2：快递员 JS（离线做好，01:00 前部署，部署时不活动）
+- 以 10/16 21:46 版 `p4_ephemeral.js` / `pilulier.js` 为基础，只做最小改动：
+  - `prompt.submit` 改为调用 `recall_router.py`；
+  - `prepareSingle` 改为接受 router 输出（不再写死 P4 的 positive_rule 白名单）；
+  - 每轮 ≤1 张，**不设每 session 上限**，同 session 内 id 去重；
+  - 槽位计数，回执带 pid 和 sid 哈希；
+  - 新开关 `/run/c-memory-v2/recall-courier-on`，每轮实时检查。
+- 用隔离原生宿主加假模型跑四轮（路径全部沙箱化）。**PASS**：
+  - T 轮请求带卡；T+1、T+2 不带；
+  - **卡片位于请求体最后一个 `cache_control` 之后**（新增检查：在假模型端记录卡片相对断点的位置）；
+  - 隔离环境的 JSONL 里没有卡片正文；system 哈希不变；
+  - 工具轮（T 轮内连续多次请求）只有第一次请求带卡，且后续请求的前缀没有因此改变。
+- 通过后，01:00 前备份并部署 JS。开关**不打开**，让它随切窗载入但不活动。
 
-### Step 2：旧召回恢复投递（需要 D1 = 留）
-- `touch /run/c-memory-v2/legacy-retained-recall-output-on`。回退方法：删掉这个文件，立即生效。
-- **PASS（24 小时）**：带出频率在每天 4–15 次；§4 的缓存指标通过；琪琪主观感受到"他又会想起事了"。
+### Step 3：正式开启（琪琪在线时）
+- 确认载入：pid 绑定的槽位计数在增长。然后 `touch recall-courier-on`，同时停掉 wrapper 的影子调用。
+- **PASS（24 小时）**：
+  - pid 绑定的投递回执，每天 4–15 次；
+  - JSONL 里没有卡片正文；
+  - §4 的缓存指标通过；
+  - 琪琪主观感受到"他又会想起事了"。
+- 回退：`rm recall-courier-on`，立即生效。
 
-### Step 3：V2 补足影子
-- wrapper 并行调用 `/usr/bin/python3.11 p4/passive_live_single.py`（stdin `{prompt}`，超时 2.0 s），只记日志：`v2_reason, v2_ready, old_empty, same_memory`。不投递。
-- 每一个"旧召回为空且 V2 ready"的案例，用 `show_source.sh` 调出原文给琪琪看，由她判断"相关 / 不相关 / 时机不对"。
-- **PASS**：加上 V2 之后延迟仍满足 p95 ≤ 1.5 s；收集到至少 10 个补足案例，并有琪琪的判断。
+### Step 4：开启 V2 补漏
+- 把 Step 1 日志里"旧召回为空、V2 ready"的案例用 `show_source.sh` 调出原文给琪琪看，由她判断"相关 / 不相关 / 时机不对"。琪琪认可后，在 router 里打开 V2 补漏（通过 router 配置，不改 JS）。
 
-### Step 4：V2 补足投递（需要 D1 = 留，且琪琪认可 Step 3 的样例）
-- 新开关 `/run/c-memory-v2/v2-complement-output-on`。只在旧召回为空时投递 V2，每轮最多一块。
-- PASS 条件同 Step 2，另外要求 V2 卡片的来源校验失败数为 0。
+### Step 5：覆盖改进（离线做，用标注集评估）
+- 把 Step 1–4 的路由日志和琪琪的判断整理成固定标注集；之后每个改动都拿同一个标注集比较前后表现。
+- 可以借鉴 Scarlett 的做法：
+  - 专名库（人名、地名、宠物、物件的本名和别名）精确命中；
+  - "已在上下文里的不浮现"；
+  - 按记忆 id 冷却；
+  - 错题集和测评集。
+- `AUTHORED` 档：程亭渡自己写下的感受，卡片上标明"你以前自己记下"。
 
-### Step 5：V2 覆盖改进（离线做，用标注集评估）
-- 把 Step 1–3 的日志和琪琪的判断整理成固定标注集。之后每一个 Gate 改动，都要拿同一个标注集比较前后表现，**不再靠外部模型的意见调方向**。
-- 候选改进：
-  - 新增 `AUTHORED` 档：程亭渡自己写的感受，来源证明 = Ombre bucket + 版本 + 未被修订；卡片写"你以前自己记下"；
-  - lexical tie 的处理；
-  - 短句续聊交给 topic cursor。
-
-### Step 6（可选，只在 D1 = 焚，或 Step 2 数据显示上下文膨胀时做）：request-only
-- 前提一：在一个**新的正式 session** 里拿到绑定了 pid 的槽位计数，证明 `total_tokens_reminder` 每轮都存在。
-- 前提二：用真实 usage 比较"焚"和"留"的缓存成本。只有"焚"确实更好才切换。
+### 过渡期（D1，琪琪决定）
+Step 3 最快也要到 10/18 白天或 10/19。在那之前，二选一：
+- **等**：这一两天没有自动召回（推荐，最符合"阅后即焚"）；
+- **临时留纸条**：先用只追加的方式递，等 Step 3 通过后立刻关掉。
 
 ---
 
-## 4. 缓存与延迟的验收口径（所有步骤通用）
+## 4. 缓存与延迟的验收口径
 
-- **数据来源**：正式 session 的 JSONL 里 assistant 消息的 `usage`（按 `message.id` 去重）。这是真实的 provider 账单数据，只读即可拿到。
-- **基线**：开关打开前 24 小时，用同一口径计算。
+- **数据**：正式 session 的 JSONL 里 assistant 消息的 `usage`，按 `message.id` 去重，看整条**时间序列**，不看单点：
+  `jq -r 'select(.type=="assistant" and .message.usage)|[.timestamp,.message.usage.cache_read_input_tokens,.message.usage.cache_creation_input_tokens]|@tsv' <session>.jsonl`
+- **基线**：开关打开前 24 小时，同一口径。
 - **PASS**：
-  - `cache_creation_input_tokens` 中位数不超过基线的 2 倍；
-  - 单次 >10k 的缓存新建，除去 session 第一条和 compact 之后的第一条，每个 session ≤ 2 次；
-  - 我们的代码对 transcript 的写入为 0（`/root/.claude/backups/pilulier/` 没有新文件）。
-- **延迟**：wrapper 自己记录 `elapsed_ms`，取 p95。
+  - 有卡的轮次，`cache_creation` 与无卡的轮次相比只多卡片本身的量级（几百 token 以内）；
+  - 下一轮 `cache_read` ≈ 上一轮 `read + create`，没有掉格；
+  - 单次 >10k 的缓存新建，除去 session 首条和 compact 之后的首条，每个 session ≤ 2 次；
+  - 我们的代码对 transcript 的写入为 0。
 
 ---
 
 ## 5. 给 ChatGPT 的执行纪律
 
-1. **一次只做一个 Step。** 开工前把 diff 给琪琪看；做完报告三件事：改了什么、PASS/FAIL 的数字、回滚命令。
-2. **不新增计划之外的东西**：开关、子系统、目录都不加；不再给 PLAN.md 加新节。结果只写进 STATUS.md（≤1 页）和本文件末尾的执行记录。
-3. **遇到计划没覆盖的情况：停下来**，写清问题，等琪琪或 Claude 修订计划。不要找外部模型重新定方向。
-4. **Gate 阈值不动**，Step 5 有标注集对比时除外。
-5. **不重启 CC，不向主模型发测试请求，不改 transcript。** 除 Step 0 里的开关操作外，不碰 `mods/` 目录。
-6. **"完成"只按 PASS 门槛判断。** 隔离测试和假模型测试只是开工的前提，不算完成。
-7. **测试不得写生产路径**（Step 0.3）。回执不绑定 pid 就不算生产证据（Step 0.4）。
-8. **每改一次 wrapper，都用正式解释器和正式 PATH 冒烟一次。**
+1. **一次只做一个 Step。** 开工前把 diff 给琪琪看；做完报告：改了什么、PASS/FAIL 的数字、回滚命令。
+2. 不新增计划之外的开关、子系统、目录；不再给 PLAN.md 加新节。结果写进 STATUS.md（≤1 页）和本文件末尾的执行记录。
+3. 遇到计划没覆盖的情况，**停下来**问琪琪或 Claude，不要找外部模型重新定方向。
+4. 不动 Gate 阈值（Step 5 用标注集比较时除外）。
+5. 不重启 CC；不向主模型发测试请求；不改 transcript；不改 Claude Code 二进制（参考仓库的二进制补丁方案**不采用**）。
+6. **"完成"只按 PASS 门槛判断。** 隔离测试只是部署的前提，不算完成。
+7. 测试不得写生产路径；回执不绑定 pid 就不算生产证据。
+8. 每改一次 Python，都用正式解释器和正式 PATH 冒烟一次。
 
 ---
 
 ## 6. 继承与废弃
 
-**继承（已核实、可复用）**
-- 代码：`memory_trigger_new.py`、`cache_safe_recall.py`（含 `reduce_output` 和去重）、`passive_live_single.py`、P4 RecallService（`127.0.0.1:18044`）、ledger、`show_source.sh`、`audit_legacy_vs_v2.py`；原生宿主加假模型的测试台只留给 Step 6 用。
-- 事实：
-  - 旧召回 10/12–14 的基线；
-  - 10/14 缓存爆炸的根因是历史改写；
-  - Python 3.6 bug 及其修复；
-  - E1–E5。
+**继承**
+- 代码：`memory_trigger_new.py`、`cache_safe_recall.py`、`passive_live_single.py`、P4 RecallService（`:18044`）、`p4_ephemeral.js` 的递送和清空机制（`prompt.attachment` + `turn.complete` invalidate）、原生宿主加假模型的测试台、`show_source.sh`、`audit_legacy_vs_v2.py`。
+- 事实：E1–E7；旧召回 10/12–14 的基线；10/14 缓存爆炸的根因是历史改写。
 
-**废弃（不再作为前提）**
-- "每 session 一张"；
-- 把 request-only 当作上线前提；
-- "等下一次切窗"作为迭代方式；
+**废弃**
+- 每 session 一张卡；
+- JS 里写死的 Gate 白名单；
+- "等切窗"作为调整召回逻辑的方式；
 - 不绑定 pid 的回执；
-- 靠外部模型的单次答复定方向。
+- 靠外部模型的单次答复定方向；
+- v1 的"焚比留更贵"。
 
-**另议（不在本计划内，需要琪琪决定是否恢复）**
-- 10/14 一起关掉的媒体、相册、追踪提醒（E4）；
-- `thinking.md` 每轮注入；
-- `pilulier-clean.py` 改写历史的风险（目前只在胶囊功能触发时出现）。
+**另议**
+- E4 里关掉的那些提醒；
+- `pilulier-clean.py` 改写历史的风险；
+- E7 的工具表漏点（`ENABLE_TOOL_SEARCH`、MCP `alwaysLoad`）；
+- 夜间闲置后的缓存保活（cache-keepalive）；
+- Claude Code 自带的杂音注入（当前 session 有 21 条 `task_reminder`）：参考 `claude-code-strip-injections`。它需要改二进制，等记忆恢复后再单独评估。
 
 ---
 

@@ -33,6 +33,8 @@
 
 7. **10/18 补记**：ChatGPT 完成 Step 0（PASS），Step 1 判 FAIL 后按规矩停下（旧召回 4/182，p95 1631 ms）。我复核后认为是我门槛定错了：慢的是 V2（被 router 白等），次数低是因为这段时间很少有"还记得…"类消息，旧召回各类命中率不比基线差。已在 `RESTART_PLAN_20261017.md` 的 Step 1 后加了"Step 1 修订"（先回滚 → V2 移出关键路径 → 新门槛重跑）。改前备份在 `backups/RESTART_PLAN.before-step1-revision-20261018.md`。
 
+8. **10/19 补记**：ChatGPT 把 embedding 改为本机（旧召回慢的真因），证明 JS 临时提醒会留在历史里，改做线级代理 `wire-courier-20261019/courier_proxy.py`（未上线）。我修了代理的流式缓冲和旁路请求误投两处，详见 STATUS.md "Claude 复核与修补"。下一步是琪琪定时间做受控切换。
+
 ## 3. 计划的核心（检查时以此为准）
 
 - **架构**：Roof mod 只当"快递员"（JS 只在进程启动时载入，保持最小）。每轮通过 `$.process.run` 调用 `router/recall_router.py`（Python，每轮新起进程，改完即生效）。router 并行跑旧召回 `memory_trigger_new.py` 和 V2 `passive_live_single.py`：旧召回优先；V2 只在旧召回为空、并且琪琪认可了样例之后才补。内容接在 `total_tokens_reminder` 后面，`turn.complete` 时 invalidate。

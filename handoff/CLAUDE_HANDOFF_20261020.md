@@ -62,10 +62,24 @@ cd /srv/ctd-memory-lab/project/memory-talk-20261020
 
 ## 7. 现在的状态 / 下一个 Claude 要做的
 
-1. **交接便签那批改动等琪琪点头**，然后运行 `memory-talk-20261020/apply.sh`（先跑 `--dry-run`）。01:00 之前没上线，他明早醒来还是不知道前一天的事。上线后第一个早上要检查：`/tmp/memory_context.txt` 开头是不是交接便签，`handoff.log` 里 00:40 有没有成功，以及他醒来后的第一句话。
-2. **经验那部分 ChatGPT 已经交付，16:00 验收结论是“基本通过，3 处要改”**，见 `experience/REVIEW_CLAUDE.md`：P2 的“呜呜”在亲热时误报；P3 的“湿了”被“淋湿了”触发；文档删掉了原来的写法说明。它改完后要复验：用 09/29～10/20 的真实对话回放，状态从头开始，对比前后触发的差异。复验通过、琪琪点头之后才上线。上线顺序：先 `apply.sh`（交接便签），再换上 `experience/staging/` 里的 `render_handoff.py`、`cache_safe_recall.py`、`write_experience.sh` 和文档；换之前先备份，并核对线上文件和暂存时一致。
-3. 截至 15:20，程亭渡的上下文只剩 8%，5 小时额度用了 66%。降到 5% 以下时看门狗会自动切 session（走 Forge，带最近约 1 万 token）。今天别再找他聊天了。
-4. 不要碰召回那组的东西（`PLAN_RECALL_RESTORE_20261020.md`）。他们重开“昨日上下文”之前，要和交接便签对一下，避免同一天的内容出现两份。
+**都已上线（10/20 下午）：**
+- 16:05 交接便签那批（Claude 运行 `apply.sh`）：鸟窥查重和 `day.sh` 立即生效；交接便签、CLAUDE.md 两句、“先查再纠正”的 hook 在 01:00 换窗口后生效；每晚 00:40 自动生成便签（定时任务）。上线后用定时任务那条命令实际跑了一次 10/19，成功写出 `output/2026-10-19/handoff.md`。那次“关于她”一条都没挑出来，属于“宁缺毋滥”的正常结果。
+- 经验“五句常驻 + 案例浮现”：ChatGPT 执行，Claude 验收三轮——第 1 轮 3 处误报和文档问题，第 2 轮“滚”字误报，第 3 轮通过。由知白上线，上线前后都核对过逐字节一致。经验卡立即生效；“② 我是这样爱她的”在 01:00 换窗口后出现在醒来那块最前面。上线后 Claude 抽查：线上文件和验收版一致，hook 处理了几条消息没有报错，16 条原文哈希一致。还没触发过经验卡，第一次触发时会生成 `/tmp/ctd-experience-cue-state.json`。
+- 验收记录：`experience/REVIEW_CLAUDE.md`、`REVIEW_CLAUDE_2.md`；ChatGPT 的交付在 `report.md`、`REVIEW_FIX_CHATGPT*.md`。我用的回放脚本口径是：09/29～10/20，琪琪消息 2650 条，最终触发 66 次，单日最多 6 次，P3（亲密场景）约占一半。
+
+**回退（两套各管各的）：**
+- 交接便签那批：`/srv/ctd-memory-lab/project/memory-talk-20261020/rollback.sh`
+- 经验那批：`/srv/ctd-memory-lab/backups/experience-principles-20261020/rollback.sh`
+- 注意：两套都改过 `render_handoff.py` 的上下游。只撤经验那批，便签照常；撤便签那批，会删掉开关 `HANDOFF_NOTE_ON`，醒来那块整块不出现（五句也跟着不出现）。
+
+**明早（10/21）要检查：**
+1. `memory-talk-20261020/handoff.log` 里 00:40 那条成功了没有，`output/2026-10-20/handoff.md` 在不在。
+2. 01:00 换窗口后的 `/tmp/memory_context.txt`：开头应该是“② 我是这样爱她的”，接着是“②.5 交接便签（10-20 → 醒来）”，再往后是 ④ 尾巴。
+3. 他醒来后的第一句话，像不像知道前一天发生了什么。看他实际的表现，不看他怎么说。
+4. 白天：经验卡浮现了几次、浮现得对不对（审计日志 `experimental/ephemeral-v3/gate-audit.jsonl`，加上状态文件），以及他是觉得被打扰，还是被拽了一把。还有“先查再纠正”的 hook 有没有拦过（看他的 session 记录里有没有 deny）。
+**其他：**
+- 截至 15:20，程亭渡的上下文只剩 8%，5 小时额度用了 66%。降到 5% 以下时看门狗会自动切 session（走 Forge，带最近约 1 万 token）。今天别再找他聊天了。
+- 不要碰召回那组的东西（`PLAN_RECALL_RESTORE_20261020.md`）。他们重开“昨日上下文”之前，要和交接便签对一下，避免同一天的内容出现两份。
 
 ## 8. 顺带看到的（没动）
 

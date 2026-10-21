@@ -9,18 +9,18 @@
 /* 一屏一个开屏；字只写 Croft，副标是今天的日期 */
 :root {
   --paper: #F3EFE7; --ink: #2A2722; --ink-2: #6F695E; --ink-3: #A49D90; --accent: #3F6B57;
-  --warm: 242, 184, 102; --petal: 232, 164, 178; --clawd: #D97757;
+  --warm: 242, 184, 102; --soft: 238, 210, 172; --petal: 232, 164, 178; --clawd: #D97757;
   --ui: -apple-system, "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
   --text: "WenKai", "Kaiti SC", "STKaiti", var(--ui);
   --slow: cubic-bezier(.2, .7, .1, 1);
 }
-:root.dark { --paper: #161513; --ink: #ECE6DA; --ink-2: #A9A296; --ink-3: #6E685E; --accent: #8DB8A3; --warm: 236, 176, 96; --petal: 214, 150, 166; }
+:root.dark { --paper: #161513; --ink: #ECE6DA; --ink-2: #A9A296; --ink-3: #6E685E; --accent: #8DB8A3; --warm: 236, 176, 96; --soft: 226, 196, 158; --petal: 214, 150, 166; }
 * { box-sizing: border-box; margin: 0; }
 html, body { height: 100%; background: var(--paper); color: var(--ink); font-family: var(--ui); -webkit-tap-highlight-color: transparent; overflow: hidden; }
 
 .stage { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden;
   background: radial-gradient(ellipse 80% 60% at 50% 45%, color-mix(in srgb, var(--accent) 5%, var(--paper)), var(--paper) 72%);
-  transition: opacity .9s var(--slow), filter .9s var(--slow); }
+  transition: opacity .9s var(--slow), filter .9s var(--slow), visibility 0s 1s; }
 .stage > .mark { position: relative; text-align: center; transition: transform 1.1s var(--slow); }
 .stage.out { opacity: 0; filter: blur(6px); }
 .stage.out > .mark { transform: scale(1.04); }
@@ -33,7 +33,7 @@ html, body { height: 100%; background: var(--paper); color: var(--ink); font-fam
 @keyframes draw { to { stroke-dashoffset: 0; } }
 .word { font-family: var(--text); font-size: 44px; letter-spacing: .14em; padding-left: .14em; line-height: 1.1; }
 .sub { font-size: 11px; letter-spacing: .4em; padding-left: .4em; color: var(--ink-3); }
-.in { opacity: 0; animation: mist 1.5s var(--slow) forwards; }
+.sx-in { opacity: 0; animation: mist 1.5s var(--slow) forwards; }
 .fadein { opacity: 0; animation: fade 1s ease-out forwards; }
 
 /* 一盏灯 */
@@ -48,9 +48,9 @@ html, body { height: 100%; background: var(--paper); color: var(--ink); font-fam
 /* 推门：单扇门往里开，加载好以后走进门里 */
 .dw { position: relative; width: 58px; height: 100px; margin: 0 auto; transition: transform 1.15s cubic-bezier(.65, 0, .25, 1); }
 .dw .halo { position: absolute; left: 50%; top: 62%; width: 230px; height: 230px; margin: -115px 0 0 -115px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--warm), .26), rgba(var(--warm), 0) 65%); opacity: 0; animation: fade 1.4s 1.2s ease-out forwards; }
+  background: radial-gradient(circle, rgba(var(--soft), .3), rgba(var(--soft), 0) 65%); opacity: 0; animation: fade 1.4s 1.2s ease-out forwards; }
 .dw .door { position: absolute; inset: 0; border-radius: 29px 29px 0 0; overflow: hidden; perspective: 260px; }
-.dw .room { position: absolute; inset: 0; background: linear-gradient(to top, rgba(var(--warm), .95), rgba(var(--warm), .42)); }
+.dw .room { position: absolute; inset: 0; background: linear-gradient(to top, rgba(var(--soft), .92), rgba(var(--soft), .38)); }
 .dw .leaf { position: absolute; top: 0; bottom: 0; left: 0; right: 1.5px; transform-origin: left center;
   background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 9%, var(--paper)), color-mix(in srgb, var(--ink) 4%, var(--paper)));
   animation: openOne 1.3s .95s cubic-bezier(.5, 0, .2, 1) forwards; }
@@ -75,7 +75,7 @@ html, body { height: 100%; background: var(--paper); color: var(--ink); font-fam
 .hz { width: 170px; height: 1px; margin: 0 auto 30px; background: var(--ink-3); transform: scaleX(0); animation: grow 1.1s .1s var(--slow) forwards; }
 
 /* 墨晕 */
-.ink { position: absolute; left: 50%; top: 40%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--ink); filter: blur(3px);
+.sx-ink { position: absolute; left: 50%; top: 40%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--ink); filter: blur(3px);
   opacity: 0; animation: bloom 2s .1s cubic-bezier(.2, .8, .2, 1) forwards; }
 @keyframes bloom { 0% { opacity: .4; transform: scale(.2); } 30% { opacity: .12; } 100% { opacity: .05; transform: scale(26); } }
 .ink-word { position: relative; font-family: var(--text); font-size: 50px; opacity: 0; animation: inkin 1.6s .55s var(--slow) forwards; }
@@ -118,14 +118,14 @@ html, body { height: 100%; background: var(--paper); color: var(--ink); font-fam
 @keyframes hide { to { visibility: hidden; } }
 .cl .wave { visibility: hidden; animation: show 0s 1.35s forwards; }
 @keyframes show { to { visibility: visible; } }
-.bubble { position: absolute; left: 196px; top: 150px; padding: 5px 10px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--paper);
+.sx-bubble { position: absolute; left: 196px; top: 150px; padding: 5px 10px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--paper);
   font-family: var(--text); font-size: 15px; white-space: nowrap; opacity: 0; transform: scale(.4); transform-origin: 0 100%; animation: popin .45s 1.6s cubic-bezier(.3, 1.8, .5, 1) forwards; }
 
 /* 胖鸟屋顶 */
-.scene { width: 230px; height: auto; display: block; margin: 0 auto 14px; overflow: visible; }
-.scene .walls { fill: color-mix(in srgb, var(--ink) 7%, var(--paper)); stroke: var(--ink); stroke-width: 2; }
-.scene .roof { fill: var(--accent); }
-.scene .win { fill: rgb(var(--warm)); opacity: 0; animation: fade .5s .5s forwards; }
+.sx-scene { width: 230px; height: auto; display: block; margin: 0 auto 14px; overflow: visible; }
+.sx-scene .walls { fill: color-mix(in srgb, var(--ink) 7%, var(--paper)); stroke: var(--ink); stroke-width: 2; }
+.sx-scene .roof { fill: var(--accent); }
+.sx-scene .win { fill: rgb(var(--warm)); opacity: 0; animation: fade .5s .5s forwards; }
 .bird-x { animation: birdx 1.15s .35s cubic-bezier(.4, .1, .4, 1) forwards; transform: translateX(150px); }
 @keyframes birdx { to { transform: translateX(0); } }
 .bird-y { animation: hop .38s .35s 3 ease-in-out; }
@@ -143,27 +143,36 @@ html, body { height: 100%; background: var(--paper); color: var(--ink); font-fam
 .smoke .puff { fill: var(--ink-3); opacity: 0; transform-box: fill-box; transform-origin: center; animation: puff 2.6s ease-out infinite; }
 @keyframes puff { 0% { opacity: 0; transform: translate(0, 0) scale(.4); } 15% { opacity: .55; } 100% { opacity: 0; transform: translate(-26px, -70px) scale(2.2); } }
 
-/* 保险柜 */
-.vw { position: relative; width: 236px; height: 236px; margin: 0 auto 26px; transition: transform 1.15s cubic-bezier(.65, 0, .25, 1); }
-.vframe { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #5B6168, #2B2F34 70%); box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
-.vlight { position: absolute; inset: 14px; border-radius: 50%; background: radial-gradient(circle, #FFE7B5, rgb(242, 184, 102) 55%, #B9772F); }
-.vpersp { position: absolute; inset: 14px; perspective: 700px; }
-.vdoor { position: absolute; inset: 0; border-radius: 50%; transform-origin: left center;
-  background: radial-gradient(circle at 34% 28%, #E9EDF0, #A6AEB6 45%, #6E767E 80%); box-shadow: inset 0 0 0 6px #858D95, inset 0 0 0 9px #C9CFD4, inset 0 -8px 18px rgba(0, 0, 0, .25);
-  animation: vopen .8s 1.75s cubic-bezier(.5, 0, .3, 1) forwards; }
-@keyframes vopen { to { transform: rotateY(-108deg); } }
-.bolt { position: absolute; left: 50%; top: 50%; width: 10px; height: 22px; margin: -11px 0 0 -5px; border-radius: 4px; background: linear-gradient(90deg, #8E969E, #DDE2E6, #8E969E); }
-.bolt i { display: block; width: 100%; height: 100%; }
-.wheel { position: absolute; left: 50%; top: 42%; width: 84px; height: 84px; margin: -42px 0 0 -42px; animation: spinw 1.2s .25s cubic-bezier(.5, 0, .3, 1) forwards; }
-@keyframes spinw { to { transform: rotate(540deg); } }
-.wheel svg { width: 100%; height: 100%; }
-.plate { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; font-family: var(--text); font-size: 22px; letter-spacing: .2em; padding-left: .2em; color: #4A5057; text-shadow: 0 1px 0 rgba(255, 255, 255, .55); }
+/* 保险柜：科普插图式的机械线稿 */
+.vw { position: relative; width: 300px; height: 260px; margin: 0 auto 18px; transform-origin: 150px 130px; transition: transform 1.15s cubic-bezier(.65, 0, .25, 1); }
+.vw svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.vw .ln { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1s .05s cubic-bezier(.5, 0, .2, 1) forwards; }
+.vw .axis { stroke: var(--ink-3); stroke-width: .6; stroke-dasharray: 7 3 1 3; fill: none; opacity: 0; animation: fade .6s .1s forwards; }
+.vw .tick { stroke: var(--ink-2); stroke-width: .7; opacity: 0; animation: fade .5s .7s forwards; }
+.vw .lab { font: 9px/1 ui-monospace, "SF Mono", Menlo, monospace; fill: var(--ink-2); letter-spacing: .06em; opacity: 0; animation: fade .5s 1s forwards; }
+.vw .lead { stroke: var(--ink-3); stroke-width: .6; fill: none; opacity: 0; animation: fade .5s .95s forwards; }
+.vlight { position: absolute; left: 54px; top: 34px; width: 192px; height: 192px; border-radius: 50%;
+  background: radial-gradient(circle, #FFF8EC, rgb(var(--soft)) 60%, color-mix(in srgb, rgb(var(--soft)) 80%, var(--ink) 20%)); }
+.vpersp { position: absolute; inset: 0; perspective: 800px; perspective-origin: 150px 130px; }
+.vdoor { position: absolute; inset: 0; transform-origin: 54px 130px; animation: vopen .75s 1.45s cubic-bezier(.5, 0, .3, 1) forwards; }
+@keyframes vopen { to { transform: rotateY(-100deg); } }
+.vdoor .face { fill: var(--paper); stroke: var(--ink); stroke-width: 1.3; }
+.vdoor .thin { fill: none; stroke: var(--ink-3); stroke-width: .7; }
+.vdoor .rod { stroke: var(--ink-2); stroke-width: .8; }
+.vdoor .gear { fill: var(--paper); stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; transform-box: view-box; }
+.vdoor .g0 { transform-origin: 150px 130px; animation: gspin 1s .2s cubic-bezier(.45, 0, .3, 1) forwards; }
+.vdoor .g1 { transform-origin: 106px 130px; animation: gspin2 1s .2s cubic-bezier(.45, 0, .3, 1) forwards; }
+.vdoor .g2 { transform-origin: 194px 130px; animation: gspin2 1s .2s cubic-bezier(.45, 0, .3, 1) forwards; }
+@keyframes gspin { to { transform: rotate(-240deg); } }
+@keyframes gspin2 { to { transform: rotate(514deg); } }
+.vdoor .bolt { fill: var(--paper); stroke: var(--ink); stroke-width: .9; }
+.vdoor .hatch { stroke: var(--ink-3); stroke-width: .6; }
+.vdoor .slide { animation: bslide .35s 1.05s cubic-bezier(.5, 0, .3, 1) forwards; }
+@keyframes bslide { to { transform: translateY(13px); } }
 .stage.v-vault.out { opacity: 0; filter: none; transition: opacity .6s .75s ease; }
 .stage.v-vault.out > .mark { transform: none; }
-.stage.v-vault.out .vw { transform: scale(12); }
-.stage.v-vault.out .sub { opacity: 0 !important; transition: opacity .3s; }
-
-@keyframes boltin { to { transform: translateY(14px); opacity: .0; } }
+.stage.v-vault.out .vw { transform: scale(10); }
+.stage.v-vault.out .vbase, .stage.v-vault.out .word, .stage.v-vault.out .sub { opacity: 0 !important; transition: opacity .3s; }
 
 /* 日升月落：固定一套天色 */
 .stage.v-dawn { background: #0F1B2D; }
@@ -222,7 +231,7 @@ html, body { height: 100%; background: var(--paper); color: var(--ink); font-fam
 .env .flap { position: absolute; left: 0; right: 0; top: 0; height: 92px; transform-origin: top center; background: color-mix(in srgb, var(--accent) 34%, var(--paper));
   clip-path: polygon(0 0, 100% 0, 50% 100%); animation: flapo .55s .55s cubic-bezier(.5, 0, .3, 1) forwards; z-index: 3; }
 @keyframes flapo { 0% { transform: rotateX(0); } 99% { z-index: 3; } 100% { transform: rotateX(180deg); z-index: 0; } }
-.env .seal { position: absolute; left: 50%; top: 76px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #B4533F; box-shadow: inset 0 0 0 3px #9C4433; z-index: 4;
+.env .sx-seal { position: absolute; left: 50%; top: 76px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #B4533F; box-shadow: inset 0 0 0 3px #9C4433; z-index: 4;
   animation: sealb .35s .35s ease-in forwards; }
 @keyframes sealb { to { transform: scale(1.3); opacity: 0; } }
 .env .card, .env .back { z-index: 1; } .env .pocket { z-index: 2; }
@@ -269,31 +278,31 @@ const now = new Date();
 const DATE = (now.getMonth() + 1) + '月' + now.getDate() + '日 · 周' + W[now.getDay()];
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const dpr = Math.min(2, window.devicePixelRatio || 1);
-function fit(cv) { cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); return c; }
+function fit(cv, w, h) { cv.width = w * dpr; cv.height = h * dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); return c; }
 const letters = (word, colors, start, step) => [...word].map((ch, i) =>
   `<span style="color:${colors[i % colors.length]};--r:${[-6, 4, -3, 5, -4][i % 5]}deg;animation-delay:${(start + i * step).toFixed(2)}s,${(start + 0.6 + i * 0.1).toFixed(2)}s">${ch}</span>`).join('');
 
 const V = [
   { id: 'lamp', name: '一盏灯', html: () => `<div class="mark"><div class="lamp"><b></b><i></i></div>
-      <div class="word in" style="animation-delay:.7s">Croft</div><div class="lamp-rule"></div><div class="sub fadein" style="animation-delay:1.6s">${DATE}</div></div>` },
+      <div class="word sx-in" style="animation-delay:.7s">Croft</div><div class="lamp-rule"></div><div class="sub fadein" style="animation-delay:1.6s">${DATE}</div></div>` },
 
   { id: 'door', name: '推门', html: () => `<div class="mark"><div class="dw"><div class="halo"></div>
       <div class="door"><div class="room"></div><div class="leaf"><i></i></div></div>
       <svg class="frame" viewBox="0 0 58 100" aria-hidden="true"><path pathLength="1" d="M.65 100 V29 A28.35 28.35 0 0 1 57.35 29 V100"/></svg></div>
-      <div class="door-ground"></div><div class="word in" style="animation-delay:1.4s;font-size:38px">Croft</div>
+      <div class="door-ground"></div><div class="word sx-in" style="animation-delay:1.4s;font-size:38px">Croft</div>
       <div class="sub fadein" style="animation-delay:1.8s;margin-top:12px">${DATE}</div></div>` },
 
   { id: 'moon', name: '月升', html: () => `<div class="mark"><div class="sky"><div class="moon"><svg viewBox="0 0 46 46" aria-hidden="true"><path d="M30 4a20 20 0 1 0 12 30A16 16 0 1 1 30 4z"/></svg></div></div>
-      <div class="hz"></div><div class="word in" style="animation-delay:1.2s;font-size:40px">Croft</div>
+      <div class="hz"></div><div class="word sx-in" style="animation-delay:1.2s;font-size:40px">Croft</div>
       <div class="sub fadein" style="animation-delay:1.6s;margin-top:14px">${DATE}</div></div>` },
 
-  { id: 'ink', name: '墨晕', html: () => `<div class="mark"><div class="ink"></div><div class="ink-word">Croft</div>
+  { id: 'ink', name: '墨晕', html: () => `<div class="mark"><div class="sx-ink"></div><div class="ink-word">Croft</div>
       <svg class="brush" viewBox="0 0 120 14" aria-hidden="true"><path pathLength="1" d="M4 9 C 30 4, 70 12, 116 6"/></svg></div>` },
 
   { id: 'stars', name: '星河', html: () => `<canvas></canvas><div class="mark" style="margin-top:150px"><div class="sub fadein" style="animation-delay:1.7s">${DATE}</div></div>`,
     start(el) {
       // 满屏星点飘过来，聚成 Croft 的字形；离开时向四周散开
-      const cv = el.querySelector('canvas'), c = fit(cv), w = innerWidth, h = innerHeight;
+      const cv = el.querySelector('canvas'), w = el.clientWidth, h = el.clientHeight, c = fit(cv, w, h);
       const fs = Math.min(w * .3, 128), off = document.createElement('canvas'), oc = off.getContext('2d');
       off.width = w; off.height = h; oc.font = `${fs}px WenKai, serif`; oc.textAlign = 'center'; oc.textBaseline = 'middle'; oc.fillText('Croft', w / 2, h * .45);
       const data = oc.getImageData(0, 0, w, h).data, pts = [], gap = w < 500 ? 4 : 5;
@@ -318,10 +327,10 @@ const V = [
       return { exit() { out = performance.now(); }, stop() { cancelAnimationFrame(raf); } };
     } },
 
-  { id: 'petals', name: '落花', html: () => `<canvas></canvas><div class="mark"><div class="word in" style="animation-delay:.6s;font-size:48px">Croft</div>
+  { id: 'petals', name: '落花', html: () => `<canvas></canvas><div class="mark"><div class="word sx-in" style="animation-delay:.6s;font-size:48px">Croft</div>
       <div class="sub fadein" style="animation-delay:1.3s;margin-top:14px">${DATE}</div></div>`,
     start(el) {
-      const cv = el.querySelector('canvas'), c = fit(cv), w = innerWidth, h = innerHeight, col = css('--petal');
+      const cv = el.querySelector('canvas'), w = el.clientWidth, h = el.clientHeight, c = fit(cv, w, h), col = css('--petal');
       const P = Array.from({ length: 38 }, () => ({ x: Math.random() * w, y: Math.random() * h * 1.1 - h * .5, v: 45 + Math.random() * 55,
         a: 14 + Math.random() * 26, f: .6 + Math.random() * .9, ph: Math.random() * 6, s: 5 + Math.random() * 6, rot: Math.random() * 6, vr: (Math.random() - .5) * 3 }));
       let last = performance.now(), raf;
@@ -364,10 +373,10 @@ const V = [
 
   { id: 'clawd', name: 'Clawd', html: () => `<div class="mark"><div class="cl">
       <img class="walk" src="/pet-assets/clawd-full/clawd-mini-crabwalk.svg" alt="">
-      <img class="wave" src="/pet-assets/clawd-full/croft-wave.svg" alt=""><div class="bubble">嗨～</div></div>
+      <img class="wave" src="/pet-assets/clawd-full/croft-wave.svg" alt=""><div class="sx-bubble">嗨～</div></div>
       <div class="pop" style="font-size:44px">${letters('Croft', ['var(--clawd)', 'var(--ink)'], 1.5, .1)}</div></div>` },
-  { id: 'bird', name: '胖鸟屋顶', html: () => `<div class="mark">
-      <svg class="scene" viewBox="0 0 230 175" aria-hidden="true">
+  { id: 'bird', name: '啄羊鹦鹉', html: () => `<div class="mark">
+      <svg class="sx-scene" viewBox="0 0 230 175" aria-hidden="true">
         <line x1="6" y1="162" x2="224" y2="162" stroke="var(--ink-3)" stroke-width="1.2"/>
         <rect x="140" y="52" width="14" height="30" fill="var(--ink-3)"/>
         <rect class="walls" x="62" y="96" width="106" height="66"/>
@@ -375,54 +384,73 @@ const V = [
         <rect x="104" y="122" width="22" height="40" rx="2" fill="var(--ink)" opacity=".75"/>
         <rect class="win" x="76" y="112" width="18" height="18" rx="2"/><rect class="win" x="138" y="112" width="18" height="18" rx="2"/>
         <g transform="translate(115 52)"><g class="bird-x"><g class="bird-y"><g class="bird-b">
-          <path d="M-14 -10 q-12 -2 -16 -10 q8 0 16 4z" fill="#8C6B52"/>
-          <ellipse cx="0" cy="-15" rx="18" ry="16" fill="#B48A68"/>
-          <ellipse cx="3" cy="-10" rx="12" ry="9.5" fill="#F4E7D4"/>
-          <path d="M-9 -18 q6 10 16 6 q-4 -9 -16 -6z" fill="#96714F"/>
-          <ellipse cx="11" cy="-14" rx="3.2" ry="2" fill="#F2A7A0" opacity=".7"/>
+          <path d="M-14 -10 q-12 -2 -16 -10 q8 0 16 4z" fill="#4E6B34"/>
+          <ellipse cx="0" cy="-15" rx="18" ry="16" fill="#6F8C45"/><ellipse cx="6" cy="-22" rx="11" ry="9" fill="#8E928C"/>
+          <ellipse cx="3" cy="-9" rx="11" ry="8" fill="#8A9A6A"/>
+          <path d="M-9 -17 q6 10 16 6 q-4 -9 -16 -6z" fill="#55733A"/><path d="M-6 -9 q5 3 9 1" stroke="#D9772B" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          
           <circle class="bird-eye" cx="8" cy="-21" r="2" fill="#2A2722"/>
-          <path d="M16 -19 l7 2 -7 2z" fill="#E9A93B"/>
-          <path d="M-3 0 v-3 M4 0 v-3" stroke="#E9A93B" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M15 -23 q8 -1 8 6 q-1 3 -3 3 q0 -4 -5 -5z" fill="#4A4C4E"/>
+          <path d="M-3 0 v-3 M4 0 v-3" stroke="#6B6E70" stroke-width="1.6" stroke-linecap="round"/>
         </g></g></g></g>
         <text class="chirp" x="146" y="26">啾</text>
       </svg>
-      <div class="word in" style="animation-delay:1.3s;font-size:40px">Croft</div>
+      <div class="word sx-in" style="animation-delay:1.3s;font-size:40px">Croft</div>
       <div class="sub fadein" style="animation-delay:1.7s;margin-top:12px">${DATE}</div></div>` },
 
   { id: 'smoke', name: '炊烟小屋', html: () => `<div class="mark">
-      <svg class="scene smoke" viewBox="0 0 230 175" aria-hidden="true">
+      <svg class="sx-scene smoke" viewBox="0 0 230 175" aria-hidden="true">
         <path class="hill" d="M0 170 Q60 132 120 150 T230 138 V175 H0Z"/>
         <path class="house" d="M66 150 V104 L112 70 L158 104 V150Z"/>
         <rect class="house" x="136" y="72" width="12" height="24"/>
         <rect class="win" x="102" y="116" width="20" height="22" rx="10" style="filter:drop-shadow(0 0 6px rgba(var(--warm),.9))"/>
         ${[0, .52, 1.04, 1.56, 2.08].map(d => `<circle class="puff" cx="142" cy="66" r="6" style="animation-delay:${(0.5 + d).toFixed(2)}s"/>`).join('')}
       </svg>
-      <div class="word in" style="animation-delay:.9s;font-size:40px">Croft</div>
+      <div class="word sx-in" style="animation-delay:.9s;font-size:40px">Croft</div>
       <div class="sub fadein" style="animation-delay:1.4s;margin-top:12px">${DATE}</div></div>` },
 
   { id: 'clawdwake', name: 'Clawd 睡醒', html: () => `<div class="mark"><div class="cl">
       <img class="sleep" src="/pet-assets/clawd-full/clawd-sleeping.svg" alt="">
       <img class="wake" src="/pet-assets/clawd-full/croft-wakeup.svg" alt="">
-      <div class="zzz"><span>z</span><span>z</span><span>Z</span></div><div class="bubble">早呀～</div></div>
+      <div class="zzz"><span>z</span><span>z</span><span>Z</span></div><div class="sx-bubble">早呀～</div></div>
       <div class="pop" style="font-size:44px">${letters('Croft', ['var(--clawd)', 'var(--ink)'], 1.55, .1)}</div></div>` },
 
-  { id: 'vault', name: '保险柜', html: () => `<div class="mark"><div class="vw"><div class="vframe"></div><div class="vlight"></div>
-      <div class="vpersp"><div class="vdoor">
-        ${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<div class="bolt" style="transform:rotate(${a}deg) translateY(-96px)"><i style="animation:boltin .3s 1.45s ease-in forwards"></i></div>`).join('')}
-        <div class="wheel"><svg viewBox="0 0 84 84" aria-hidden="true"><g stroke="#5E666E" stroke-width="5" stroke-linecap="round"><path d="M42 8 V76 M8 42 H76 M18 18 L66 66 M66 18 L18 66"/></g>
-          <circle cx="42" cy="42" r="34" fill="none" stroke="#7C848C" stroke-width="5"/><circle cx="42" cy="42" r="11" fill="#C9CFD4" stroke="#5E666E" stroke-width="3"/></svg></div>
-        <div class="plate">Croft</div></div></div></div>
-      <div class="sub fadein" style="animation-delay:.6s">${DATE}</div></div>` },
+  { id: 'vault', name: '保险柜', html: () => {
+      const gear = (cx, cy, r, n, d) => { let p = ''; for (let i = 0; i < n * 4; i++) { const a = i / (n * 4) * Math.PI * 2, rr = i % 4 < 2 ? r : r - d; p += (i ? 'L' : 'M') + (cx + rr * Math.cos(a)).toFixed(1) + ' ' + (cy + rr * Math.sin(a)).toFixed(1); } return p + 'Z'; };
+      const ticks = Array.from({ length: 72 }, (_, i) => { const a = i * 5 * Math.PI / 180, r2 = i % 6 ? 108 : 112; return `<line class="tick" x1="${(150 + 104 * Math.cos(a)).toFixed(1)}" y1="${(130 + 104 * Math.sin(a)).toFixed(1)}" x2="${(150 + r2 * Math.cos(a)).toFixed(1)}" y2="${(130 + r2 * Math.sin(a)).toFixed(1)}"/>`; }).join('');
+      const ang = [30, 90, 150, 210, 270, 330];
+      const rods = ang.map(a => { const t = (a - 90) * Math.PI / 180; return `<line class="rod" x1="${(150 + 30 * Math.cos(t)).toFixed(1)}" y1="${(130 + 30 * Math.sin(t)).toFixed(1)}" x2="${(150 + 76 * Math.cos(t)).toFixed(1)}" y2="${(130 + 76 * Math.sin(t)).toFixed(1)}"/>`; }).join('');
+      const bolts = ang.map(a => `<g transform="rotate(${a} 150 130)"><g class="slide"><rect class="bolt" x="146" y="22" width="8" height="30" rx="1"/><path class="hatch" d="M147 30 l6 -5 M147 37 l6 -5 M147 44 l6 -5"/></g></g>`).join('');
+      return `<div class="mark"><div class="vw">
+      <svg class="vbase" viewBox="0 0 300 260" aria-hidden="true">
+        <path class="axis" d="M14 130 H286 M150 4 V256"/>
+        <circle class="ln" pathLength="1" cx="150" cy="130" r="114" stroke-width="1.4"/><circle class="ln" pathLength="1" cx="150" cy="130" r="104" stroke-width=".8"/>${ticks}
+        <path class="lead" d="M228 52 L250 26 H292"/><text class="lab" x="252" y="21">锁栓 ×6</text>
+        <path class="lead" d="M110 120 L60 30 H8"/><text class="lab" x="8" y="25">齿轮组</text>
+        <path class="lead" d="M96 196 L62 236 H8"/><text class="lab" x="8" y="249">门体 ⌀192</text>
+      </svg>
+      <div class="vlight"></div>
+      <div class="vpersp"><svg class="vdoor" viewBox="0 0 300 260" aria-hidden="true">
+        <circle class="face" cx="150" cy="130" r="96"/><circle class="thin" cx="150" cy="130" r="88" stroke-dasharray="2 3"/><circle class="thin" cx="150" cy="130" r="62"/>
+        ${rods}${bolts}
+        <g class="gear g1"><path d="${gear(106, 130, 14, 8, 3)}"/><circle cx="106" cy="130" r="3" fill="none" stroke="var(--ink)"/></g>
+        <g class="gear g2"><path d="${gear(194, 130, 14, 8, 3)}"/><circle cx="194" cy="130" r="3" fill="none" stroke="var(--ink)"/></g>
+        <g class="gear g0"><path d="${gear(150, 130, 30, 16, 4)}"/><circle cx="150" cy="130" r="9" fill="none" stroke="var(--ink)"/>
+          <path d="M150 104 V156 M124 130 H176" stroke="var(--ink-2)" stroke-width=".8"/></g>
+        <circle cx="150" cy="130" r="2.5" fill="var(--ink)"/>
+      </svg></div></div>
+      <div class="word sx-in" style="animation-delay:1.1s;font-size:34px">Croft</div>
+      <div class="sub fadein" style="animation-delay:1.4s;margin-top:10px">${DATE}</div></div>`; } },
 
   { id: 'dawn', name: '日升月落', html: () => `<div class="sk a"></div><div class="sk b"></div><div class="sk c"></div><div class="dmoon"></div><div class="dsun"></div>
       <svg class="hills" viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden="true"><path class="h1" d="M0 90 Q90 30 190 80 T400 60 V200 H0Z"/><path class="h2" d="M0 140 Q120 90 230 130 T400 110 V200 H0Z"/></svg>
       <div class="mark"><div class="dword">Croft</div><div class="dsub">${DATE}</div></div>` },
 
-  { id: 'tide', name: '涨潮', html: () => `<canvas></canvas><div class="mark" style="margin-top:-120px"><div class="word in" style="animation-delay:.2s;font-size:46px">Croft</div>
+  { id: 'tide', name: '涨潮', html: () => `<canvas></canvas><div class="mark" style="margin-top:-120px"><div class="word sx-in" style="animation-delay:.2s;font-size:46px">Croft</div>
       <div class="sub fadein" style="animation-delay:.8s;margin-top:14px">${DATE}</div></div>`,
     start(el) {
       // 海水慢慢涨上来，一只纸船漂着；加载好以后一个浪头盖过整屏，进首页
-      const cv = el.querySelector('canvas'), c = fit(cv), w = innerWidth, h = innerHeight, t0 = performance.now();
+      const cv = el.querySelector('canvas'), w = el.clientWidth, h = el.clientHeight, c = fit(cv, w, h), t0 = performance.now();
       let flood = 0, raf;
       const layers = [{ a: 9, k: .018, sp: 1.3, top: '#5FA4A8', bot: '#2E6F78', al: .55, off: -14 }, { a: 7, k: .024, sp: -1.7, top: '#3E8790', bot: '#1F5560', al: .75, off: 0 }, { a: 5, k: .031, sp: 2.2, top: '#2C6E78', bot: '#163F4C', al: 1, off: 12 }];
       (function frame(t) {
@@ -463,7 +491,7 @@ const V = [
       <div class="nword">Croft</div><div class="nsub">${DATE}</div></div>` },
 
   { id: 'letter', name: '拆信', html: () => `<div class="mark"><div class="env"><div class="back"></div>
-      <div class="card"><b>Croft</b><span class="sub">${DATE}</span></div><div class="pocket"></div><div class="flap"></div><div class="seal"></div></div></div>` },
+      <div class="card"><b>Croft</b><span class="sub">${DATE}</span></div><div class="pocket"></div><div class="flap"></div><div class="sx-seal"></div></div></div>` },
 ];
 
 const tip = document.getElementById('tip'), list = document.getElementById('list');

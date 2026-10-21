@@ -1,0 +1,218 @@
+/* Croft 开屏：每次打开随机一个。源头是 splash-preview.html，由 croft-splash/build_croft.py 生成，别直接改这里。 */
+:root { --warm: 242, 184, 102; --soft: 238, 210, 172; --petal: 232, 164, 178; --clawd: #D97757;
+  --sx-text: var(--font-text, "WenKai", serif); --sx-ui: var(--font-ui, system-ui, sans-serif); --sx-slow: cubic-bezier(.2, .7, .1, 1); }
+@media (prefers-color-scheme: dark) { :root { --warm: 236, 176, 96; --soft: 226, 196, 158; --petal: 214, 150, 166; } }
+.splash.stage, .splash.stage.out { clip-path: none; }
+.splash.stage { display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(ellipse 80% 60% at 50% 45%, color-mix(in srgb, var(--accent) 5%, var(--paper)), var(--paper) 72%);
+  transition: opacity .9s var(--sx-slow), filter .9s var(--sx-slow), visibility 0s 1s; }
+.splash.stage > .mark { position: relative; text-align: center; transition: transform 1.1s var(--sx-slow); }
+.splash.stage.out { opacity: 0; filter: blur(6px); }
+.splash.stage.out > .mark { transform: scale(1.04); }
+.splash.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+@keyframes sx-mist { from { opacity: 0; filter: blur(10px); transform: translateY(6px); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes sx-fade { to { opacity: 1; } }
+@keyframes sx-grow { to { transform: scaleX(1); } }
+@keyframes sx-growY { to { transform: scaleY(1); } }
+@keyframes sx-draw { to { stroke-dashoffset: 0; } }
+.splash.stage .word { font-family: var(--sx-text); font-size: 44px; letter-spacing: .14em; padding-left: .14em; line-height: 1.1; }
+.splash.stage .sub { font-size: 11px; letter-spacing: .4em; padding-left: .4em; color: var(--ink-3); }
+.splash.stage .sx-in { opacity: 0; animation: sx-mist 1.5s var(--sx-slow) forwards; }
+.splash.stage .fadein { opacity: 0; animation: sx-fade 1s ease-out forwards; }
+/* 一盏灯 */
+.splash.stage .lamp { position: relative; width: 6px; height: 6px; margin: 0 auto 34px; }
+.splash.stage .lamp i { position: absolute; inset: 0; border-radius: 50%; background: rgb(var(--warm)); opacity: 0;
+  box-shadow: 0 0 18px 6px rgba(var(--warm), .55); animation: sx-fade 1.2s .1s ease-out forwards, sx-breath 3.2s 1.4s ease-in-out infinite; }
+.splash.stage .lamp b { position: absolute; left: 50%; top: 50%; width: 340px; height: 340px; margin: -170px 0 0 -170px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--warm), .16), rgba(var(--warm), 0) 62%); opacity: 0; animation: sx-fade 1.8s .3s ease-out forwards; }
+@keyframes sx-breath { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+.splash.stage .lamp-rule { width: 72px; height: 1px; margin: 20px auto 14px; background: var(--ink-3); transform: scaleX(0); animation: sx-grow 1.1s 1.3s var(--sx-slow) forwards; }
+/* 推门：单扇门往里开，加载好以后走进门里 */
+.splash.stage .dw { position: relative; width: 58px; height: 100px; margin: 0 auto; transition: transform 1.15s cubic-bezier(.65, 0, .25, 1); }
+.splash.stage .dw .halo { position: absolute; left: 50%; top: 62%; width: 230px; height: 230px; margin: -115px 0 0 -115px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--soft), .3), rgba(var(--soft), 0) 65%); opacity: 0; animation: sx-fade 1.4s 1.2s ease-out forwards; }
+.splash.stage .dw .door { position: absolute; inset: 0; border-radius: 29px 29px 0 0; overflow: hidden; perspective: 260px; }
+.splash.stage .dw .room { position: absolute; inset: 0; background: linear-gradient(to top, rgba(var(--soft), .92), rgba(var(--soft), .38)); }
+.splash.stage .dw .leaf { position: absolute; top: 0; bottom: 0; left: 0; right: 1.5px; transform-origin: left center;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 9%, var(--paper)), color-mix(in srgb, var(--ink) 4%, var(--paper)));
+  animation: sx-openOne 1.3s .95s cubic-bezier(.5, 0, .2, 1) forwards; }
+.splash.stage .dw .leaf i { position: absolute; right: 7px; top: 60%; width: 4px; height: 4px; border-radius: 50%; background: var(--ink-3); }
+@keyframes sx-openOne { to { transform: rotateY(-84deg); } }
+.splash.stage .dw .frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: sx-draw 1.2s .1s cubic-bezier(.5, 0, .2, 1) forwards; }
+.splash.stage .door-ground { width: 136px; height: 1px; margin: 0 auto 26px; background: var(--ink-3); opacity: 0; animation: sx-fade 1s .5s forwards; }
+.splash.stage.v-door.out { opacity: 0; filter: none; transition: opacity .6s .75s ease, visibility 0s 1.5s; }
+.splash.stage.v-door.out > .mark { transform: none; }
+.splash.stage.v-door.out .dw { transform: scale(24); }
+.splash.stage.v-door.out .frame, .splash.stage.v-door.out .door-ground, .splash.stage.v-door.out .word, .splash.stage.v-door.out .sub, .splash.stage.v-door.out .halo { opacity: 0 !important; transition: opacity .3s; }
+/* 月升 */
+.splash.stage .sky { position: relative; width: 170px; height: 96px; margin: 0 auto; overflow: hidden; }
+.splash.stage .moon { position: absolute; left: 50%; bottom: 0; width: 46px; height: 46px; margin-left: -23px; transform: translateY(64px); animation: sx-moonup 1.9s .3s cubic-bezier(.25, .7, .2, 1) forwards; }
+.splash.stage .moon svg { width: 100%; height: 100%; overflow: visible; }
+.splash.stage .moon path { fill: rgb(var(--warm)); }
+.splash.stage .moon::before { content: ""; position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--warm), .22), rgba(var(--warm), 0) 62%); }
+@keyframes sx-moonup { to { transform: translateY(-22px); } }
+.splash.stage .hz { width: 170px; height: 1px; margin: 0 auto 30px; background: var(--ink-3); transform: scaleX(0); animation: sx-grow 1.1s .1s var(--sx-slow) forwards; }
+/* 墨晕 */
+.splash.stage .sx-ink { position: absolute; left: 50%; top: 40%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--ink); filter: blur(3px);
+  opacity: 0; animation: sx-bloom 2s .1s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes sx-bloom { 0% { opacity: .4; transform: scale(.2); } 30% { opacity: .12; } 100% { opacity: .05; transform: scale(26); } }
+.splash.stage .ink-word { position: relative; font-family: var(--sx-text); font-size: 50px; opacity: 0; animation: sx-inkin 1.6s .55s var(--sx-slow) forwards; }
+@keyframes sx-inkin { from { opacity: 0; filter: blur(14px); letter-spacing: .6em; } to { opacity: 1; filter: blur(0); letter-spacing: .14em; } }
+.splash.stage .brush { position: relative; display: block; width: 120px; height: 14px; margin: 14px auto 0; overflow: visible; }
+.splash.stage .brush path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sx-draw .9s 1.4s cubic-bezier(.6, 0, .2, 1) forwards; }
+/* 鎏金：固定深色，不跟主题 */
+.splash.stage.v-gold { background: radial-gradient(ellipse 70% 55% at 50% 46%, #221B12, #0F0C08 75%); }
+.splash.stage .gold-box { position: relative; padding: 34px 40px 26px; }
+.splash.stage .gold-frame { position: absolute; inset: 0; border: 1px solid #8C7044; clip-path: inset(50% 50% 50% 50%); animation: sx-frame 1.5s .1s cubic-bezier(.6, 0, .2, 1) forwards; }
+@keyframes sx-frame { to { clip-path: inset(0 0 0 0); } }
+.splash.stage .gold-box .corner { position: absolute; left: 50%; width: 7px; height: 7px; margin-left: -3.5px; background: #D9BC7E; transform: rotate(45deg); opacity: 0; animation: sx-fade .6s 1.4s forwards; }
+.splash.stage .gold-box .corner.t { top: -4px; }
+.splash.stage .gold-box .corner.b { bottom: -4px; }
+.splash.stage .gold-word { font-family: var(--sx-text); font-size: 52px; letter-spacing: .16em; padding-left: .16em; line-height: 1.1;
+  background: linear-gradient(110deg, #7A5B28 0%, #D9BC7E 38%, #FFF4D6 50%, #D9BC7E 62%, #7A5B28 100%); background-size: 260% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent; opacity: 0;
+  animation: sx-mist 1.4s .6s var(--sx-slow) forwards, sx-sheen 1.8s 1.1s ease-in-out forwards; }
+@keyframes sx-sheen { to { background-position: 0 0; } }
+.splash.stage .gold-sub { margin-top: 12px; font-size: 10px; letter-spacing: .5em; padding-left: .5em; color: #9C8257; opacity: 0; animation: sx-fade 1s 1.6s forwards; }
+/* 蜡笔小屋 */
+.splash.stage .crayon { width: 190px; height: auto; display: block; margin: 0 auto 6px; overflow: visible; }
+.splash.stage .crayon .d { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sx-draw .7s cubic-bezier(.5, 0, .3, 1) forwards; }
+.splash.stage .crayon .f { opacity: 0; animation: sx-fade .4s forwards; }
+.splash.stage .crayon .rays { transform-box: fill-box; transform-origin: center; animation: sx-spin 9s linear infinite; }
+@keyframes sx-spin { to { transform: rotate(360deg); } }
+.splash.stage .crayon .sun { transform-box: fill-box; transform-origin: center; animation: sx-fade .4s .1s forwards, sx-bob 1.6s .5s ease-in-out infinite; }
+@keyframes sx-bob { 50% { transform: translateY(-4px) scale(1.05); } }
+.splash.stage .pop { display: inline-flex; gap: 2px; font-family: var(--sx-text); font-size: 50px; line-height: 1.1; }
+.splash.stage .pop span { display: inline-block; opacity: 0; transform: scale(0); animation: sx-popin .55s cubic-bezier(.3, 1.8, .5, 1) forwards, sx-wig 1.4s ease-in-out infinite; }
+@keyframes sx-popin { to { opacity: 1; transform: scale(1) rotate(var(--r, 0deg)); } }
+@keyframes sx-wig { 50% { translate: 0 -3px; } }
+/* Clawd */
+.splash.stage .cl { position: relative; width: 300px; height: 300px; margin: -90px auto -18px; image-rendering: pixelated; }
+.splash.stage .cl img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.splash.stage .cl .walk { transform: translateX(-75vw); animation: sx-walkin 1.25s .1s cubic-bezier(.3, .6, .4, 1) forwards, sx-hide 0s 1.35s forwards; }
+@keyframes sx-walkin { to { transform: none; } }
+@keyframes sx-hide { to { visibility: hidden; } }
+.splash.stage .cl .wave { visibility: hidden; animation: sx-show 0s 1.35s forwards; }
+@keyframes sx-show { to { visibility: visible; } }
+.splash.stage .sx-bubble { position: absolute; left: 196px; top: 150px; padding: 5px 10px; border-radius: 14px 14px 14px 4px; background: var(--ink); color: var(--paper);
+  font-family: var(--sx-text); font-size: 15px; white-space: nowrap; opacity: 0; transform: scale(.4); transform-origin: 0 100%; animation: sx-popin .45s 1.6s cubic-bezier(.3, 1.8, .5, 1) forwards; }
+/* 胖鸟屋顶 */
+.splash.stage .sx-scene { width: 230px; height: auto; display: block; margin: 0 auto 14px; overflow: visible; }
+.splash.stage .sx-scene .walls { fill: color-mix(in srgb, var(--ink) 7%, var(--paper)); stroke: var(--ink); stroke-width: 2; }
+.splash.stage .sx-scene .roof { fill: var(--accent); }
+.splash.stage .sx-scene .win { fill: rgb(var(--warm)); opacity: 0; animation: sx-fade .5s .5s forwards; }
+.splash.stage .bird-x { animation: sx-birdx 1.15s .35s cubic-bezier(.4, .1, .4, 1) forwards; transform: translateX(150px); }
+@keyframes sx-birdx { to { transform: translateX(0); } }
+.splash.stage .bird-y { animation: sx-hop .38s .35s 3 ease-in-out; }
+@keyframes sx-hop { 50% { transform: translateY(-18px); } }
+.splash.stage .bird-b { transform-box: fill-box; transform-origin: 50% 100%; animation: sx-squish .5s 1.5s ease-out, sx-breathe 2.4s 2s ease-in-out infinite; }
+@keyframes sx-squish { 30% { transform: scale(1.12, .84); } 70% { transform: scale(.96, 1.05); } }
+@keyframes sx-breathe { 50% { transform: scale(1.03, .98); } }
+.splash.stage .bird-eye { transform-box: fill-box; transform-origin: center; animation: sx-blink .18s 1.95s 2 alternate; }
+@keyframes sx-blink { to { transform: scaleY(.1); } }
+.splash.stage .chirp { opacity: 0; animation: sx-fade .3s 1.75s forwards; font-family: var(--sx-text); font-size: 13px; fill: var(--ink-2); }
+/* 炊烟小屋 */
+.splash.stage .smoke .hill { fill: color-mix(in srgb, var(--accent) 22%, var(--paper)); }
+.splash.stage .smoke .house { fill: var(--ink); }
+.splash.stage .smoke .puff { fill: var(--ink-3); opacity: 0; transform-box: fill-box; transform-origin: center; animation: sx-puff 2.6s ease-out infinite; }
+@keyframes sx-puff { 0% { opacity: 0; transform: translate(0, 0) scale(.4); } 15% { opacity: .55; } 100% { opacity: 0; transform: translate(-26px, -70px) scale(2.2); } }
+/* 保险柜：科普插图式的机械线稿 */
+.splash.stage .vw { position: relative; width: 300px; height: 260px; margin: 0 auto 18px; transform-origin: 150px 130px; transition: transform 1.15s cubic-bezier(.65, 0, .25, 1); }
+.splash.stage .vw svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.splash.stage .vw .ln { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sx-draw 1s .05s cubic-bezier(.5, 0, .2, 1) forwards; }
+.splash.stage .vw .axis { stroke: var(--ink-3); stroke-width: .6; stroke-dasharray: 7 3 1 3; fill: none; opacity: 0; animation: sx-fade .6s .1s forwards; }
+.splash.stage .vw .tick { stroke: var(--ink-2); stroke-width: .7; opacity: 0; animation: sx-fade .5s .7s forwards; }
+.splash.stage .vw .lab { font: 9px/1 ui-monospace, "SF Mono", Menlo, monospace; fill: var(--ink-2); letter-spacing: .06em; opacity: 0; animation: sx-fade .5s 1s forwards; }
+.splash.stage .vw .lead { stroke: var(--ink-3); stroke-width: .6; fill: none; opacity: 0; animation: sx-fade .5s .95s forwards; }
+.splash.stage .vlight { position: absolute; left: 54px; top: 34px; width: 192px; height: 192px; border-radius: 50%;
+  background: radial-gradient(circle, #FFF8EC, rgb(var(--soft)) 60%, color-mix(in srgb, rgb(var(--soft)) 80%, var(--ink) 20%)); }
+.splash.stage .vpersp { position: absolute; inset: 0; perspective: 800px; perspective-origin: 150px 130px; }
+.splash.stage .vdoor { position: absolute; inset: 0; transform-origin: 54px 130px; animation: sx-vopen .75s 1.45s cubic-bezier(.5, 0, .3, 1) forwards; }
+@keyframes sx-vopen { to { transform: rotateY(-100deg); } }
+.splash.stage .vdoor .face { fill: var(--paper); stroke: var(--ink); stroke-width: 1.3; }
+.splash.stage .vdoor .thin { fill: none; stroke: var(--ink-3); stroke-width: .7; }
+.splash.stage .vdoor .rod { stroke: var(--ink-2); stroke-width: .8; }
+.splash.stage .vdoor .gear { fill: var(--paper); stroke: var(--ink); stroke-width: 1; stroke-linejoin: round; transform-box: view-box; }
+.splash.stage .vdoor .g0 { transform-origin: 150px 130px; animation: sx-gspin 1s .2s cubic-bezier(.45, 0, .3, 1) forwards; }
+.splash.stage .vdoor .g1 { transform-origin: 106px 130px; animation: sx-gspin2 1s .2s cubic-bezier(.45, 0, .3, 1) forwards; }
+.splash.stage .vdoor .g2 { transform-origin: 194px 130px; animation: sx-gspin2 1s .2s cubic-bezier(.45, 0, .3, 1) forwards; }
+@keyframes sx-gspin { to { transform: rotate(-240deg); } }
+@keyframes sx-gspin2 { to { transform: rotate(514deg); } }
+.splash.stage .vdoor .bolt { fill: var(--paper); stroke: var(--ink); stroke-width: .9; }
+.splash.stage .vdoor .hatch { stroke: var(--ink-3); stroke-width: .6; }
+.splash.stage .vdoor .slide { animation: sx-bslide .35s 1.05s cubic-bezier(.5, 0, .3, 1) forwards; }
+@keyframes sx-bslide { to { transform: translateY(13px); } }
+.splash.stage.v-vault.out { opacity: 0; filter: none; transition: opacity .6s .75s ease, visibility 0s 1.5s; }
+.splash.stage.v-vault.out > .mark { transform: none; }
+.splash.stage.v-vault.out .vw { transform: scale(10); }
+.splash.stage.v-vault.out .vbase, .splash.stage.v-vault.out .word, .splash.stage.v-vault.out .sub { opacity: 0 !important; transition: opacity .3s; }
+/* 日升月落：固定一套天色 */
+.splash.stage.v-dawn { background: #0F1B2D; }
+.splash.stage .sk { position: absolute; inset: 0; opacity: 0; }
+.splash.stage .sk.a { opacity: 1; background: linear-gradient(#0B1626, #1E2F4A 70%, #2C3D58); }
+.splash.stage .sk.b { background: linear-gradient(#3B4C78, #E9967A 62%, #F8C98F); animation: sx-fade 1.1s .35s ease-in-out forwards; }
+.splash.stage .sk.c { background: linear-gradient(#BFDCEB, #F4E6CF 75%, #F6EBD9); animation: sx-fade 1s 1.35s ease-in-out forwards; }
+.splash.stage .dmoon { position: absolute; left: 22%; top: 16%; width: 38px; height: 38px; border-radius: 50%; background: #F4F1E4; box-shadow: 0 0 30px 8px rgba(244, 241, 228, .25); animation: sx-msink 1.8s .1s ease-in forwards; }
+@keyframes sx-msink { to { transform: translate(-40px, 260px); opacity: 0; } }
+.splash.stage .dsun { position: absolute; right: 9%; bottom: 18%; width: 62px; height: 62px; border-radius: 50%; background: radial-gradient(circle, #FFE2A6, #FFB04F); box-shadow: 0 0 60px 20px rgba(255, 176, 79, .35);
+  transform: translateY(120px); animation: sx-srise 1.9s .5s cubic-bezier(.2, .7, .2, 1) forwards; }
+@keyframes sx-srise { to { transform: translateY(-230px); } }
+.splash.stage .hills { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 34%; }
+.splash.stage .hills path { transition: fill 1s; }
+.splash.stage .hills .h1 { fill: #22324A; animation: sx-h1c 2s .3s forwards; }
+.splash.stage .hills .h2 { fill: #18253A; animation: sx-h2c 2s .3s forwards; }
+@keyframes sx-h1c { to { fill: #9DB7A5; } }
+@keyframes sx-h2c { to { fill: #6E9180; } }
+.splash.stage .dword { position: relative; font-family: var(--sx-text); font-size: 48px; letter-spacing: .14em; padding-left: .14em; color: #F3EFE7; margin-top: -90px; animation: sx-dwc 2s .3s forwards; opacity: 0; }
+@keyframes sx-dwc { 0% { opacity: 0; } 30% { opacity: 1; color: #F3EFE7; } 100% { opacity: 1; color: #2A2722; } }
+.splash.stage .dsub { position: relative; margin-top: 12px; font-size: 11px; letter-spacing: .4em; padding-left: .4em; color: #5E6A6F; opacity: 0; animation: sx-fade 1s 1.6s forwards; }
+/* 涨潮 */
+.splash.stage.v-tide canvas { z-index: 2; }
+.splash.stage.v-tide.out { opacity: 0; filter: none; transition: opacity .5s .85s ease, visibility 0s 1.5s; }
+.splash.stage.v-tide.out > .mark { transform: none; }
+/* 打字机 */
+.splash.stage .paper { position: relative; width: 240px; padding: 34px 22px 26px; background: color-mix(in srgb, #FFFFFF 55%, var(--paper)); box-shadow: 0 12px 34px rgba(40, 30, 20, .14);
+  transform: translateY(60px); opacity: 0; animation: sx-pin .7s .05s var(--sx-slow) forwards; text-align: left; }
+@keyframes sx-pin { to { transform: none; opacity: 1; } }
+.splash.stage .tw { font-family: "Courier New", Courier, ui-monospace, monospace; color: var(--ink); white-space: pre; }
+.splash.stage .tw.big { font-size: 40px; font-weight: 600; letter-spacing: .04em; min-height: 46px; }
+.splash.stage .tw.small { font-size: 12px; letter-spacing: .12em; color: var(--ink-2); margin-top: 10px; min-height: 16px; }
+.splash.stage .caret { display: inline-block; width: .55em; height: 2px; background: var(--ink); vertical-align: baseline; animation: sx-cb .6s steps(1) infinite; }
+@keyframes sx-cb { 50% { opacity: 0; } }
+.splash.stage .ding { position: absolute; right: 12px; top: 10px; font-family: var(--sx-text); font-size: 13px; color: var(--accent); opacity: 0; }
+.splash.stage .ding.on { animation: sx-dg .6s ease-out forwards; }
+@keyframes sx-dg { 0% { opacity: 0; transform: translateY(4px) scale(.6); } 40% { opacity: 1; transform: none; } 100% { opacity: .8; } }
+/* 霓虹：固定深色 */
+.splash.stage.v-neon { background: #141017; background-image: repeating-linear-gradient(0deg, transparent 0 21px, rgba(255, 255, 255, .025) 21px 22px), repeating-linear-gradient(90deg, transparent 0 43px, rgba(255, 255, 255, .02) 43px 44px); }
+.splash.stage .nhouse { width: 92px; height: auto; display: block; margin: 0 auto 18px; overflow: visible; fill: none; stroke: #7FF3EE; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px #3FE0DA) drop-shadow(0 0 12px #1FB8B2); opacity: 0; animation: sx-flick 1.2s 1.05s steps(1) forwards; }
+.splash.stage .nword { font-family: var(--sx-text); font-size: 60px; letter-spacing: .1em; padding-left: .1em; color: #FFE3F4; line-height: 1.1;
+  text-shadow: 0 0 4px #FF9AD5, 0 0 12px #FF4FB0, 0 0 28px #FF2D9A, 0 0 50px #D41F7E; opacity: 0; animation: sx-flick 1.3s .25s steps(1) forwards; }
+@keyframes sx-flick { 0% { opacity: 0; } 12% { opacity: 1; } 18% { opacity: .15; } 30% { opacity: 1; } 36% { opacity: .3; } 44%, 100% { opacity: 1; } }
+.splash.stage .nsub { margin-top: 18px; font-size: 11px; letter-spacing: .45em; padding-left: .45em; color: #6FC9C5; opacity: 0; animation: sx-fade .8s 1.8s forwards; }
+/* 拆信 */
+.splash.stage .env { position: relative; width: 232px; height: 150px; margin: 70px auto 0; }
+.splash.stage .env .back { position: absolute; inset: 0; border-radius: 6px; background: color-mix(in srgb, var(--accent) 18%, var(--paper)); }
+.splash.stage .env .card { position: absolute; left: 14px; right: 14px; top: 12px; height: 128px; border-radius: 4px; background: color-mix(in srgb, #FFFFFF 60%, var(--paper)); box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; animation: sx-cardup .8s 1.15s var(--sx-slow) forwards; }
+@keyframes sx-cardup { to { transform: translateY(-96px); } }
+.splash.stage .env .card b { font-family: var(--sx-text); font-weight: 400; font-size: 34px; letter-spacing: .14em; padding-left: .14em; color: var(--ink); }
+.splash.stage .env .pocket { position: absolute; inset: 0; border-radius: 6px; background: color-mix(in srgb, var(--accent) 26%, var(--paper)); clip-path: polygon(0 0, 50% 58%, 100% 0, 100% 100%, 0 100%); }
+.splash.stage .env .flap { position: absolute; left: 0; right: 0; top: 0; height: 92px; transform-origin: top center; background: color-mix(in srgb, var(--accent) 34%, var(--paper));
+  clip-path: polygon(0 0, 100% 0, 50% 100%); animation: sx-flapo .55s .55s cubic-bezier(.5, 0, .3, 1) forwards; z-index: 3; }
+@keyframes sx-flapo { 0% { transform: rotateX(0); } 99% { z-index: 3; } 100% { transform: rotateX(180deg); z-index: 0; } }
+.splash.stage .env .sx-seal { position: absolute; left: 50%; top: 76px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: #B4533F; box-shadow: inset 0 0 0 3px #9C4433; z-index: 4;
+  animation: sx-sealb .35s .35s ease-in forwards; }
+@keyframes sx-sealb { to { transform: scale(1.3); opacity: 0; } }
+.splash.stage .env .card, .splash.stage .env .back { z-index: 1; }
+.splash.stage .env .pocket { z-index: 2; }
+/* Clawd 睡醒 */
+.splash.stage .zzz { position: absolute; left: 168px; top: 120px; font-family: var(--sx-text); font-size: 16px; color: var(--ink-3); }
+.splash.stage .zzz span { position: absolute; opacity: 0; animation: sx-zz 1.4s ease-out 1 forwards; }
+.splash.stage .zzz span:nth-child(2) { animation-delay: .35s; font-size: 20px; }
+.splash.stage .zzz span:nth-child(3) { animation-delay: .7s; font-size: 24px; }
+@keyframes sx-zz { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(16px, -40px); } }
+.splash.stage .cl .sleep { animation: sx-hide 0s 1.3s forwards; }
+.splash.stage .cl .wake { visibility: hidden; animation: sx-show 0s 1.3s forwards; }

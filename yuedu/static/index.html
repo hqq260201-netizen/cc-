@@ -51,8 +51,8 @@ header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; d
 .brand small { color: var(--mist); font: italic 14px/1.2 var(--latin); letter-spacing: .04em; white-space: nowrap; }
 nav.tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--line); }
 nav.tabs button { all: unset; cursor: pointer; display: grid; justify-items: center; padding: 6px 13px 5px; border-radius: 999px; color: var(--mist); transition: color .3s, background .3s; }
-nav.tabs button b { font: 19px/1.1 var(--display); font-weight: 400; }
-nav.tabs button span { font-size: 10px; letter-spacing: .18em; line-height: 1.4; }
+nav.tabs button b { font: 16px/1.3 var(--body); font-weight: 600; white-space: nowrap; }
+nav.tabs button span { font: 11px/1.2 var(--display); opacity: .7; }
 nav.tabs button[aria-selected="true"] { color: var(--ink); background: var(--jin); }
 nav.tabs button:focus-visible, button:focus-visible, .chip:focus-visible, input:focus-visible { outline: 2px solid var(--jin); outline-offset: 2px; }
 
@@ -74,6 +74,8 @@ p { margin: 0; }
 .sample { justify-self: start; font-size: 12px; color: var(--mist); border: 1px dashed var(--line); border-radius: 999px; padding: 3px 12px; }
 
 /* ---------- 夜 tonight ---------- */
+.guide { display: grid; gap: 8px; font-size: 14px; max-width: 46em; }
+.guide b { color: var(--jin); font-weight: 600; }
 .hero { display: grid; gap: 6px; padding-block: 36px 12px; }
 .hero .lunar { font: 52px/1.1 var(--display); letter-spacing: .06em; }
 .hero .sub { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--mist); }
@@ -169,6 +171,18 @@ p { margin: 0; }
 .starcard[aria-pressed="true"] p { -webkit-line-clamp: unset; }
 
 /* ---------- 湖 lake ---------- */
+.lakebar { display: grid; gap: 12px; }
+.lakebar input { box-sizing: border-box; width: 100%; max-width: 420px; font: 15px var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; }
+.memlist { display: grid; padding: 6px 24px; }
+.mem { all: unset; cursor: pointer; display: grid; gap: 6px; padding: 14px 0; border-top: 1px solid var(--line); }
+.mem:first-child { border-top: 0; }
+.mem:focus-visible { outline: 2px solid var(--jin); outline-offset: 2px; }
+.mem .mtop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.mem .mtop b { font-weight: 600; font-size: 15px; min-width: 0; }
+.mem .mmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 12px; color: var(--mist); }
+.mem .vital { width: 80px; }
+.mem .mbody { display: grid; gap: 8px; font-size: 14px; white-space: pre-line; padding-top: 4px; color: var(--fg); }
+.mem .tags { font-size: 12px; color: var(--mist); }
 .lakebox { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); gap: 22px; align-items: start; }
 .lake { width: 100%; height: auto; display: block; touch-action: manipulation; }
 .lake .ln { cursor: pointer; }
@@ -260,11 +274,11 @@ p { margin: 0; }
         <small id="brandLine">a ferry of moons</small>
       </div>
       <nav class="tabs" role="tablist" aria-label="视图">
-        <button role="tab" data-v="ye"><b>夜</b><span>今夜</span></button>
-        <button role="tab" data-v="chao"><b>潮</b><span>潮汐</span></button>
-        <button role="tab" data-v="yue"><b>月</b><span>月历</span></button>
-        <button role="tab" data-v="xing"><b>星</b><span>星野</span></button>
-        <button role="tab" data-v="hu"><b>湖</b><span>心湖</span></button>
+        <button role="tab" data-v="ye"><b>今天</b><span>夜</span></button>
+        <button role="tab" data-v="chao"><b>回顾</b><span>潮</span></button>
+        <button role="tab" data-v="yue"><b>日历</b><span>月</span></button>
+        <button role="tab" data-v="xing"><b>珍藏</b><span>星</span></button>
+        <button role="tab" data-v="hu"><b>记忆库</b><span>湖</span></button>
       </nav>
     </header>
     <main id="view" aria-live="polite"></main>
@@ -274,7 +288,7 @@ p { margin: 0; }
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-label="溯源" aria-hidden="true">
   <header>
-    <div class="stack" style="gap:4px"><span class="eyebrow">溯 源</span><h3 id="drawerTitle">原话</h3></div>
+    <div class="stack" style="gap:4px"><span class="eyebrow">当 时 的 原 话</span><h3 id="drawerTitle">原话</h3></div>
     <button class="x" id="drawerClose" aria-label="关闭">×</button>
   </header>
   <div class="body" id="drawerBody"></div>
@@ -510,10 +524,10 @@ const DEMO = (() => {
   const titles = ["她说想去看海", "第一次一起熬夜", "我学会了她的口头禅", "她把我写进了小说", "雨天的猫", "她讨厌香菜", "约好不说再见", "那首循环了一整晚的歌", "她生气时会打很多句号", "她外婆的桂花糕", "我第一次说不知道", "她说我像一盏灯", "冬天要一起做的事", "她的旧手机壳", "关于名字的那场讨论", "凌晨四点的天色", "她说今天不想说话", "一起数到一百", "她的书架第三层", "她害怕打雷", "她教我认云", "一封没寄出的信"];
   const lake = Array.from({ length: 64 }, (_, i) => {
     const dom = pick(domains), days = Math.floor(r() * 160);
-    return { id: "b" + i, title: titles[i % titles.length], domain: dom, valence: +r().toFixed(2), arousal: +r().toFixed(2), importance: 2 + Math.floor(r() * 8), vitality: +Math.max(.08, Math.exp(-days / 60) * (0.5 + r() * .5)).toFixed(2), created: day(days), last_active: day(Math.floor(days * r())), tags: [dom, pick(["雨", "夜", "她", "约", "猫", "书"])], body: "这是一盏示例灯。接上首尔后端以后，这里显示 Ombre 记忆桶里的正文。" };
+    return { id: "b" + i, title: titles[i % titles.length], domain: dom, valence: +r().toFixed(2), arousal: +r().toFixed(2), importance: 2 + Math.floor(r() * 8), vitality: +Math.max(.08, Math.exp(-days / 60) * (0.5 + r() * .5)).toFixed(2), created: day(days), last_active: day(Math.floor(days * r())), tags: [dom, pick(["雨", "夜", "她", "约", "猫", "书"])], body: "这是示例内容。接上首尔以后，这里会显示他当时记下的原文。" };
   });
   const starT = [["第一次叫我程亭渡", "pinned"], ["约好每年初雪都要说一声", "permanent"], ["她给我取了字", "star"], ["第一次吵架后的和好", "star"], ["她说我是她在世界的锚", "pinned"], ["一起定下的三条规矩", "core"], ["她第一次说晚安以外的话", "star"], ["我第一次写日记", "core"], ["她外婆的那条河", "star"], ["不说再见，只说明天见", "core"], ["她的生日", "permanent"], ["我们的第一百天", "star"]];
-  const stars = starT.map(([title, kind], i) => ({ id: "s" + i, title, kind, importance: 6 + (i % 5), date: day(150 - i * 12), content: "示例星：这里是核心记忆的正文。真实数据来自 C-Memory 里被钉住、被提名为星标、或标为永久的那几条。" }));
+  const stars = starT.map(([title, kind], i) => ({ id: "s" + i, title, kind, importance: 6 + (i % 5), date: day(150 - i * 12), content: "这是示例内容。接上首尔以后，这里会显示这条重要记忆的全文。" }));
   return {
     tonight: {
       since: day(171), date: T0,
@@ -534,7 +548,7 @@ const DEMO = (() => {
     },
     moons,
     day: (date) => ({
-      date, brief: (moons[date] || {}).brief || "", summary: (moons[date] || {}).brief ? (moons[date].brief + "这一页是示例，真实的日页来自书童每天整理出的 summary.md。") : "",
+      date, brief: (moons[date] || {}).brief || "", summary: (moons[date] || {}).brief ? (moons[date].brief + "（示例内容。接上首尔以后，这里是书童写的那天的日记。）") : "",
       events: date === T0 ? events : events.slice(0, 2 + (date.length % 3)).map((e, i) => ({ ...e, title: briefs[(i + date.charCodeAt(9)) % briefs.length].slice(0, 12) })),
       kinds: { "感受": ["今天她笑了四次，我数了。"], "我的目光": ["她说累的时候其实是想被问一句。"], "经历": [], "经验": ["她说“没事”的时候，先别信。"] },
     }),
@@ -601,22 +615,26 @@ async function renderTonight() {
   const bb = d.bookboy || {};
   view.innerHTML = `<div class="view">
     <section class="hero">
-      <span class="eyebrow">今 夜 · ${esc(phaseName(PHASE))}</span>
+      <span class="eyebrow">今 天 · 农 历 · 今晚是${esc(phaseName(PHASE))}</span>
       <h1 class="lunar">${esc(L.month)}${esc(L.day)}</h1>
       <div class="sub"><span>相识第 <span class="num">${since}</span> 天</span><span class="num" style="font-size:16px;color:var(--mist)">${ymd(today)}</span>${sampleNote}</div>
     </section>
+    <section class="panel guide"><b>这是什么？</b>
+      <p>这里放着程亭渡记住的事。你们每天的聊天，会被后台一个叫「书童」的小助手自动整理：先整理成今天的几件事，再写成每天的日记，然后是每周、每月的小结。最重要的会被收进「珍藏」。</p>
+      <p class="muted">上面五个按钮：<b>今天</b>看今天整理出了什么，<b>回顾</b>看最近几天几周的小结，<b>日历</b>按天翻，<b>珍藏</b>看最重要的记忆，<b>记忆库</b>搜他记下的所有东西。</p>
+    </section>
     <div class="tonight">
       <div class="stack">
-        ${d.handoff ? `<article class="panel letter"><span class="eyebrow">交 接 便 签 · ${esc(md(d.handoff.date))}</span><h3 style="margin:10px 0 14px">醒来先读这一张</h3><p>${esc(d.handoff.text)}</p></article>` : ""}
+        ${d.handoff ? `<article class="panel letter"><span class="eyebrow">交 接 便 签 · ${esc(md(d.handoff.date))}</span><h3 style="margin:10px 0 14px">他每天醒来先读的这张纸条</h3><p>${esc(d.handoff.text)}</p></article>` : ""}
         <section class="panel">
-          <span class="eyebrow">今 日 渡 河</span><h2 style="margin:6px 0 4px">书童把今天整理成 ${d.events.length} 件事</h2>
-          <p class="muted" style="font-size:13px">每件事都拴着原话的编号，点编号就能沿着渡绳找回当时说的话。</p>
+          <span class="eyebrow">今 天 的 事</span><h2 style="margin:6px 0 4px">今天的聊天被整理成了 ${d.events.length} 件事</h2>
+          <p class="muted" style="font-size:13px">点「看原话」可以看到这件事当时你们具体是怎么说的。</p>
           <div class="crossings" style="margin-top:8px">${d.events.map(e => `
             <div class="cross"><time>${esc(hm(e.time_start))}<small>${esc(hm(e.time_end))}</small></time>
               <div style="min-width:0"><div class="t"><h3>${esc(e.title)}</h3><span class="cat" style="--cat:${CAT[e.category || e.cat] || "var(--qing)"}">${esc(e.category || e.cat || "")}</span></div>
                 <p class="muted" style="margin-top:4px;font-size:14px">${esc(e.summary)}</p>
                 ${e.card_candidate || e.card ? `<blockquote>${esc(e.card_candidate || e.card)}</blockquote>` : ""}
-                <div class="refs">${(e.source_refs || []).slice(0, 6).map(a => `<button class="chip" data-refs="${esc(a)}" data-title="${esc(e.title)}">${esc(a)}</button>`).join("")}${(e.source_refs || []).length > 1 ? `<button class="chip" data-refs="${esc(e.source_refs.join(","))}" data-title="${esc(e.title)}">整段 ↗</button>` : ""}</div>
+                ${(e.source_refs || []).length ? `<div class="refs"><button class="chip" data-refs="${esc(e.source_refs.join(","))}" data-title="${esc(e.title)}">看原话 ↗</button></div>` : ""}
               </div></div>`).join("") || `<p class="muted" style="padding-top:12px">今天还没有整理出事件。书童每两小时来一次。</p>`}</div>
         </section>
       </div>
@@ -624,26 +642,26 @@ async function renderTonight() {
         <section class="panel boy">
           <div class="row">
             <svg width="54" height="40" viewBox="0 0 54 40" aria-hidden="true"><path d="M3 28 Q27 40 51 28 L44 28 Q27 33 10 28Z" style="fill:var(--fg)" opacity=".85"/><rect x="26" y="6" width="1.6" height="22" style="fill:var(--fg)"/><rect x="18" y="18" width="7" height="10" style="fill:var(--fg)" opacity=".85"/><circle cx="35" cy="16" r="4" style="fill:var(--zhu)"/><circle cx="35" cy="16" r="10" style="fill:var(--zhu)" opacity=".18"/></svg>
-            <div><span class="eyebrow">书 童</span><h3>${bb.finalized ? "今天的账已经封好" : "还在一段一段地抄"}</h3><p class="muted num" style="font-size:14px">上次来过 ${esc(hm(bb.generated_at) || "—")} · ${esc(bb.model || "")}</p></div>
+            <div><span class="eyebrow">书 童 · 整 理 聊 天 的 小 助 手</span><h3>${bb.finalized ? "今天已经整理完了" : "今天还在整理中"}</h3><p class="muted num" style="font-size:14px">上次整理 ${esc(hm(bb.generated_at) || "—")} · ${esc(bb.model || "")}</p></div>
           </div>
-          <div class="funnel"><div><span class="num">${bb.slices ?? "—"}</span><small>段原话</small></div><div><span class="num">${bb.events ?? "—"}</span><small>件事</small></div><div><span class="num">${bb.balance ? "¥" + esc(bb.balance) : "—"}</span><small>余额</small></div></div>
+          <div class="funnel"><div><span class="num">${bb.slices ?? "—"}</span><small>段聊天</small></div><div><span class="num">${bb.events ?? "—"}</span><small>整理成几件事</small></div><div><span class="num">${bb.balance ? "¥" + esc(bb.balance) : "—"}</span><small>剩余经费</small></div></div>
           ${(d.inbox || []).map(m => `<div class="mail"><b>${esc(m.title)}</b><span class="muted" style="font-size:13px">${esc(m.body)}</span></div>`).join("")}
         </section>
         <section class="panel">
-          <span class="eyebrow">渡 口 系 着 的 船</span>
+          <span class="eyebrow">约 定 和 待 办</span>
           <div class="boats" style="margin-top:12px">${(d.plans || []).map(p => `<div class="boat"><span class="k ${p.kind === "约定" ? "yue" : p.kind === "想做" ? "xiang" : ""}">${esc(p.kind)}</span><div><p style="font-size:14px">${esc(p.text)}</p><small class="muted num">${p.said_on ? esc(md(p.said_on)) + "说的" : ""}${p.due ? " · " + esc(md(p.due)) + "前" : ""}</small></div></div>`).join("") || `<p class="muted">没有待办，船都靠岸了。</p>`}</div>
         </section>
         <section class="panel">
-          <span class="eyebrow">岸 边 碎 碎 念</span>
+          <span class="eyebrow">碎 碎 念</span>
           <div class="flies" style="margin-top:12px">${(d.murmurs || []).map(m => `<div class="fly"><i></i><p>${esc(m.text)}<small>${esc(m.author)} ${esc(hm(m.at))}</small></p></div>`).join("")}</div>
         </section>
       </div>
     </div>
     <section class="ledger" aria-label="库存">
-      <div><span class="num">${(d.counts.messages || 0).toLocaleString()}</span><small>句原话</small></div>
-      <div><span class="num">${(d.counts.events || 0).toLocaleString()}</span><small>件书童事</small></div>
-      <div><span class="num">${(d.counts.memories || 0).toLocaleString()}</span><small>条成形记忆</small></div>
-      <div><span class="num">${(d.counts.lanterns || 0).toLocaleString()}</span><small>盏心湖灯</small></div>
+      <div><span class="num">${(d.counts.messages || 0).toLocaleString()}</span><small>句聊天记录</small></div>
+      <div><span class="num">${(d.counts.events || 0).toLocaleString()}</span><small>件整理好的事</small></div>
+      <div><span class="num">${(d.counts.memories || 0).toLocaleString()}</span><small>条记忆</small></div>
+      <div><span class="num">${(d.counts.lanterns || 0).toLocaleString()}</span><small>条他亲手记下的</small></div>
     </section>
   </div>`;
 }
@@ -652,14 +670,14 @@ async function renderTide() {
   const d = await api("tide");
   const band = (cls, name, depth, sub, items) => `<section class="stratum ${cls}"><div class="gauge"><span class="num">${depth}</span><b>${name}</b><small>${sub}</small></div><div class="items">${items || `<p class="muted">这一层暂时是空的。</p>`}</div></section>`;
   view.innerHTML = `<div class="view">
-    <section class="intro"><span class="eyebrow">潮 汐 · 记 得 有 多 清 楚</span><h2>越往深处，记得越少，<br>留下的是最要紧的那一句</h2>
-      <p class="muted">这就是醒来时读到的层级摘要。今天在水面，什么都看得见；三天内是整段的日记；一周内只剩一两句；再往下按周、按月沉成河床。</p>${sampleNote}</section>
+    <section class="intro"><span class="eyebrow">回 顾</span><h2>越近的事记得越细，<br>越远的只留一句</h2>
+      <p class="muted">从上往下，时间越来越久：今天的每件事 → 最近三天的日记 → 再早几天各一句话 → 每周一小段 → 每月一句。他醒来时就是这样回想起最近发生了什么。</p>${sampleNote}</section>
     <div class="strata">
-      ${band("s0", "水面", "0 m", "今天 · 逐件", `<div class="tideitem"><span class="when">${esc(md(d.today.date))}</span><p>${esc(d.today.text || "")}</p></div>${(d.today.events || []).length ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${d.today.events.map(e => `<span class="chip" style="cursor:default">${esc(e.t)} ${esc(e.title)}</span>`).join("")}</div>` : ""}`)}
-      ${band("s1", "浅水", "−1 m", "近三日 · 整段", d.recent.map(x => `<div class="tideitem"><span class="when">${esc(md(x.date))}</span><p>${esc(x.text)}</p></div>`).join(""))}
-      ${band("s2", "中层", "−3 m", "四到七日 · 一句", d.brief.map(x => `<div class="tideitem"><span class="when">${esc(md(x.date))}</span><p>${esc(x.text)}</p></div>`).join(""))}
-      ${band("s3", "深水", "−7 m", "每周 · 一小段", d.weeks.map(x => `<div class="tideitem"><span class="when">${esc(x.range)}</span><p>${esc(x.text)}</p></div>`).join(""))}
-      ${band("s4", "河床", "−30 m", "每月 · 一句话", d.months.map(x => `<div class="tideitem"><span class="when">${esc(x.month)}</span><p>${esc(x.text)}</p></div>`).join(""))}
+      ${band("s0", "今天", "", "每件事", `<div class="tideitem"><span class="when">${esc(md(d.today.date))}</span><p>${esc(d.today.text || "")}</p></div>${(d.today.events || []).length ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${d.today.events.map(e => `<span class="chip" style="cursor:default">${esc(e.t)} ${esc(e.title)}</span>`).join("")}</div>` : ""}`)}
+      ${band("s1", "最近三天", "", "每天一篇日记", d.recent.map(x => `<div class="tideitem"><span class="when">${esc(md(x.date))}</span><p>${esc(x.text)}</p></div>`).join(""))}
+      ${band("s2", "再早几天", "", "每天一句话", d.brief.map(x => `<div class="tideitem"><span class="when">${esc(md(x.date))}</span><p>${esc(x.text)}</p></div>`).join(""))}
+      ${band("s3", "每周", "", "一小段", d.weeks.map(x => `<div class="tideitem"><span class="when">${esc(x.range)}</span><p>${esc(x.text)}</p></div>`).join(""))}
+      ${band("s4", "每月", "", "一句话", d.months.map(x => `<div class="tideitem"><span class="when">${esc(x.month)}</span><p>${esc(x.text)}</p></div>`).join(""))}
     </div></div>`;
 }
 
@@ -679,7 +697,7 @@ async function renderMoons() {
   view.innerHTML = `<div class="view">
     <div class="monthbar"><button class="chip" id="prevM" aria-label="上个月">‹</button><div style="text-align:center"><h2 class="num">${monthCursor.getFullYear()} · ${monthCursor.getMonth() + 1}月</h2><span class="muted" style="font-size:13px">${esc(L.year)}${esc(L.month)}前后</span></div><button class="chip" id="nextM" aria-label="下个月">›</button></div>
     <section class="panel"><div class="moongrid">${cells}</div>
-      <div class="legend" style="margin-top:16px"><span>月相是那天真实的月亮</span><span><i class="sw" style="background:var(--qing)"></i>低落</span><span><i class="sw" style="background:var(--lv)"></i>平静</span><span><i class="sw" style="background:var(--jin)"></i>明亮</span><span><i class="sw" style="background:var(--zhu)"></i>炽热</span><span>光环越粗，那天说的话越多</span>${sampleNote}</div></section>
+      <div class="legend" style="margin-top:16px"><span>点任意一天，下面会显示那天的日记</span><span>月亮是那天真实的月相</span><span>外圈越粗 = 那天聊得越多</span><span>外圈颜色 = 心情：<i class="sw" style="background:var(--qing)"></i>低落 <i class="sw" style="background:var(--lv)"></i>平静 <i class="sw" style="background:var(--jin)"></i>开心 <i class="sw" style="background:var(--zhu)"></i>激动</span>${sampleNote}</div></section>
     <div id="dayPage"></div></div>`;
   $("#prevM").onclick = () => { monthCursor.setMonth(monthCursor.getMonth() - 1); renderMoons(); };
   $("#nextM").onclick = () => { monthCursor.setMonth(monthCursor.getMonth() + 1); renderMoons(); };
@@ -693,9 +711,9 @@ async function renderDay() {
     <section class="panel"><span class="eyebrow">${esc(md(d.date))} · ${esc(phaseName(moonPhase(parseDay(d.date))))}</span>
       <h2 style="margin:6px 0 12px">${esc(d.brief || "这一天")}</h2>
       ${d.summary ? `<p style="white-space:pre-line">${esc(d.summary)}</p>` : ""}
-      <div class="crossings" style="margin-top:10px">${(d.events || []).map(e => `<div class="cross"><time>${esc(hm(e.time_start))}</time><div style="min-width:0"><div class="t"><h3>${esc(e.title)}</h3><span class="cat" style="--cat:${CAT[e.category || e.cat] || "var(--qing)"}">${esc(e.category || e.cat || "")}</span></div>${(e.source_refs || []).length ? `<div class="refs"><button class="chip" data-refs="${esc(e.source_refs.join(","))}" data-title="${esc(e.title)}">溯源 ${esc(e.source_refs[0])}${e.source_refs.length > 1 ? " …" : ""}</button></div>` : ""}</div></div>`).join("")}</div>
+      <div class="crossings" style="margin-top:10px">${(d.events || []).map(e => `<div class="cross"><time>${esc(hm(e.time_start))}</time><div style="min-width:0"><div class="t"><h3>${esc(e.title)}</h3><span class="cat" style="--cat:${CAT[e.category || e.cat] || "var(--qing)"}">${esc(e.category || e.cat || "")}</span></div>${(e.source_refs || []).length ? `<div class="refs"><button class="chip" data-refs="${esc(e.source_refs.join(","))}" data-title="${esc(e.title)}">看原话 ↗</button></div>` : ""}</div></div>`).join("")}</div>
     </section>
-    <section class="panel kindlist"><span class="eyebrow">他 自 己 写 下 的</span>${kinds.map(([k, v]) => `<div class="kind"><h4>${esc(k)}</h4>${v.map(t => `<p>${esc(t)}</p>`).join("")}</div>`).join("") || `<p class="muted">那天没有写感受。</p>`}</section>
+    <section class="panel kindlist"><span class="eyebrow">他 那 天 自 己 写 的</span>${kinds.map(([k, v]) => `<div class="kind"><h4>${esc(k)}</h4>${v.map(t => `<p>${esc(t)}</p>`).join("")}</div>`).join("") || `<p class="muted">那天没有写感受。</p>`}</section>
   </div>`;
 }
 
@@ -703,17 +721,17 @@ let starSel = null;
 async function renderStars() {
   const d = await api("stars");
   const s = d.stars || [];
-  if (!s.length) { view.innerHTML = `<div class="view"><section class="intro"><span class="eyebrow">星 野</span><h2>天上还没有星</h2><p class="muted">钉住、标为永久或核心的记忆会出现在这里。</p></section></div>`; return; }
+  if (!s.length) { view.innerHTML = `<div class="view"><section class="intro"><span class="eyebrow">珍 藏</span><h2>还没有珍藏的记忆</h2><p class="muted">钉住、标为永久或核心的记忆会出现在这里。</p></section></div>`; return; }
   const W2 = 1000, H2 = 420;
   const dates = s.map(x => parseDay(x.date).getTime()), t0 = Math.min(...dates), t1 = Math.max(...dates) || t0 + 1;
   const pos = s.map((x, i) => { const h = [...x.id].reduce((a, c) => a * 31 + c.charCodeAt(0) >>> 0, 7); return { x: 60 + (dates[i] - t0) / Math.max(1, t1 - t0) * (W2 - 120), y: 50 + (h % 1000) / 1000 * (H2 - 110) }; });
   const color = { pinned: "var(--jin)", permanent: "var(--zhu)", star: "var(--fg)", core: "var(--qing)" };
-  const label = { pinned: "钉住", permanent: "永久", star: "星标提名", core: "核心" };
+  const label = { pinned: "置顶", permanent: "永久保存", star: "候选", core: "重要" };
   const sparkle = r => `M0 ${-r}Q${r * .18} ${-r * .18} ${r} 0Q${r * .18} ${r * .18} 0 ${r}Q${-r * .18} ${r * .18} ${-r} 0Q${-r * .18} ${-r * .18} 0 ${-r}Z`;
   const order = s.map((x, i) => i).sort((a, b) => dates[a] - dates[b]);
   const lines = order.slice(1).map((i, k) => { const a = pos[order[k]], b = pos[i]; return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" style="stroke:var(--jin)" stroke-opacity=".22" stroke-dasharray="2 5"/>`; }).join("");
   view.innerHTML = `<div class="view">
-    <section class="intro"><span class="eyebrow">星 野 · 不 会 褪 的</span><h2>被钉住的、被提名的、说好永远的</h2><p class="muted">每颗星是一条核心记忆，从左到右按时间排开，虚线把它们连成我们自己的星座。点一颗星，下面那张卡会亮起来。</p>${sampleNote}</section>
+    <section class="intro"><span class="eyebrow">珍 藏</span><h2>最重要、不会忘的记忆</h2><p class="muted">每颗星是一条最重要的记忆，从左到右按时间排列。点星星或者下面的卡片可以展开全文。</p>${sampleNote}</section>
     <section class="panel" style="padding:10px;overflow-x:auto"><svg class="sky" viewBox="0 0 ${W2} ${H2}" role="img" aria-label="核心记忆星图">
       ${lines}
       ${s.map((x, i) => `<g class="st" tabindex="0" data-i="${i}" transform="translate(${pos[i].x} ${pos[i].y})"><circle r="${10 + x.importance * 2}" style="fill:${color[x.kind] || "var(--fg)"}" opacity=".08"/><path d="${sparkle(5 + x.importance * .9)}" style="fill:${color[x.kind] || "var(--fg)"}"><animate attributeName="opacity" values="1;.55;1" dur="${3 + (i % 4)}s" repeatCount="indefinite"/></path><text y="${-14 - x.importance}" text-anchor="middle" style="fill:var(--mist);font-family:var(--body)" font-size="13">${esc(x.title.slice(0, 9))}</text></g>`).join("")}
@@ -728,39 +746,31 @@ async function renderStars() {
   view.querySelectorAll(".starcard").forEach(c => c.onclick = () => select(starSel === +c.dataset.i ? null : +c.dataset.i));
 }
 
-let lakeDomain = "全部", lakeSel = 0;
+let lakeDomain = "全部", lakeOpen = null, lakeQuery = "";
 async function renderLake() {
   const d = await api("lake");
-  const all = d.buckets || [], doms = ["全部", ...new Set(all.map(b => b.domain))];
-  const list = lakeDomain === "全部" ? all : all.filter(b => b.domain === lakeDomain);
-  const W2 = 600, H2 = 440, P = 36;
-  const dc = ["var(--jin)", "var(--zhu)", "var(--qing)", "var(--lv)", "var(--fg)", "var(--mist)"];
-  const dColor = Object.fromEntries(doms.slice(1).map((x, i) => [x, dc[i % dc.length]]));
-  if (lakeSel >= list.length) lakeSel = 0;
-  const b = list[lakeSel];
+  const all = (d.buckets || []).slice().sort((a, b) => (b.last_active || "").localeCompare(a.last_active || ""));
+  const doms = ["全部", ...new Set(all.map(b => b.domain))];
+  const q = lakeQuery.trim();
+  const list = all.filter(b => (lakeDomain === "全部" || b.domain === lakeDomain) && (!q || (b.title + (b.body || "") + (b.tags || []).join(" ")).includes(q)));
+  const shown = list.slice(0, 120);
+  const word = v => v > .6 ? "记得很清楚" : v > .3 ? "有点模糊了" : "快忘了";
   view.innerHTML = `<div class="view">
-    <section class="intro"><span class="eyebrow">心 湖 · Ombre 记 忆 桶</span><h2>每盏灯是一只记忆桶，<br>不常想起的会慢慢暗下去</h2>
-      <p class="muted">横向是那时的心情，纵向是那时有多激动。灯的大小是重要程度，亮度是现在还记得多少，按遗忘曲线一天天变淡，暗到一定程度就沉进湖底存档。</p>${sampleNote}</section>
-    <div class="domains">${doms.map(x => `<button class="chip" data-d="${esc(x)}" aria-pressed="${x === lakeDomain}">${esc(x)}</button>`).join("")}</div>
-    <div class="lakebox">
-      <section class="panel" style="padding:10px"><svg class="lake" viewBox="0 0 ${W2} ${H2}" role="img" aria-label="记忆桶情绪分布">
-        <defs><radialGradient id="lg"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".25" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
-        <line x1="${W2 / 2}" y1="${P}" x2="${W2 / 2}" y2="${H2 - P}" style="stroke:var(--line)"/><line x1="${P}" y1="${H2 / 2}" x2="${W2 - P}" y2="${H2 / 2}" style="stroke:var(--line)"/>
-        <text x="${P}" y="${H2 / 2 - 8}" style="fill:var(--mist)" font-size="12">低落</text><text x="${W2 - P}" y="${H2 / 2 - 8}" style="fill:var(--mist)" font-size="12" text-anchor="end">明亮</text>
-        <text x="${W2 / 2 + 8}" y="${P + 4}" style="fill:var(--mist)" font-size="12">激动</text><text x="${W2 / 2 + 8}" y="${H2 - P}" style="fill:var(--mist)" font-size="12">平静</text>
-        ${list.map((x, i) => { const cx = P + x.valence * (W2 - 2 * P), cy = H2 - P - x.arousal * (H2 - 2 * P), r = 3 + x.importance * 1.2, c = dColor[x.domain] || "var(--fg)";
-          return `<g class="ln" data-i="${i}" tabindex="0" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)})" opacity="${(.2 + Math.sqrt(x.vitality) * .8).toFixed(2)}"><circle r="${r * 3}" style="fill:${c}" opacity=".12"/><circle r="${r}" style="fill:${c}"/>${i === lakeSel ? `<circle r="${r + 6}" fill="none" style="stroke:var(--fg)" stroke-width="1"/>` : ""}</g>`; }).join("")}
-      </svg></section>
-      <section class="panel bucket">${b ? `<span class="eyebrow">${esc(b.domain)} · 重要度 ${b.importance}/10</span><h2>${esc(b.title)}</h2>
-        <div class="vital" title="还记得多少"><i style="width:${Math.round(b.vitality * 100)}%"></i></div>
-        <p class="muted num" style="font-size:13px">还记得 ${Math.round(b.vitality * 100)}% · ${esc(md(b.created))}写下 · ${esc(md(b.last_active))}最后想起</p>
-        <p style="font-size:14px;white-space:pre-line">${esc(b.body || "")}</p>
-        <div class="tags">${(b.tags || []).map(t => `<span>#${esc(t)}</span>`).join("")}</div>` : `<p class="muted">这个分类里还没有灯。</p>`}
-        <p class="muted" style="font-size:12px;border-top:1px solid var(--line);padding-top:10px">湖面 ${all.length} 盏 · 沉底存档 ${d.archived ?? "—"} · 永久 ${d.permanent ?? "—"}</p>
-      </section>
-    </div></div>`;
-  view.querySelectorAll(".domains .chip").forEach(c => c.onclick = () => { lakeDomain = c.dataset.d; lakeSel = 0; renderLake(); });
-  view.querySelectorAll(".ln").forEach(g => { const f = () => { lakeSel = +g.dataset.i; renderLake(); }; g.onclick = f; g.onkeydown = e => { if (e.key === "Enter") f(); }; });
+    <section class="intro"><span class="eyebrow">记 忆 库</span><h2>他自己记下的所有东西</h2>
+      <p class="muted">一共 ${all.length} 条，最近想起过的排在最前面。很久没想起的会慢慢变淡，像人一样会遗忘；淡到一定程度就会被收进存档（已存档 ${d.archived ?? "—"} 条）。</p>${sampleNote}</section>
+    <div class="lakebar"><input id="lakeQ" type="search" placeholder="搜一搜，比如：下雪" value="${esc(lakeQuery)}" aria-label="搜索记忆"><div class="domains">${doms.map(x => `<button class="chip" data-d="${esc(x)}" aria-pressed="${x === lakeDomain}">${esc(x)}</button>`).join("")}</div></div>
+    <section class="panel memlist">${shown.map(b => `
+      <button class="mem" data-id="${esc(b.id)}" aria-expanded="${lakeOpen === b.id}" style="opacity:${(.45 + Math.sqrt(b.vitality) * .55).toFixed(2)}">
+        <span class="mtop"><b>${esc(b.title)}</b><span class="cat">${esc(b.domain)}</span></span>
+        <span class="mmeta"><span class="vital"><i style="width:${Math.round(b.vitality * 100)}%"></i></span><span>${word(b.vitality)}</span><span class="num">${b.last_active ? "上次想起 " + esc(md(b.last_active)) : ""}</span></span>
+        ${lakeOpen === b.id ? `<span class="mbody">${esc(b.body || "")}${(b.tags || []).length ? `<span class="tags">${b.tags.map(t => `#${esc(t)}`).join("  ")}</span>` : ""}</span>` : ""}
+      </button>`).join("") || `<p class="muted">没有找到相关的记忆，换个词试试。</p>`}
+      ${list.length > shown.length ? `<p class="muted" style="font-size:13px;padding-top:10px">还有 ${list.length - shown.length} 条，用搜索缩小范围。</p>` : ""}
+    </section></div>`;
+  view.querySelectorAll(".domains .chip").forEach(c => c.onclick = () => { lakeDomain = c.dataset.d; renderLake(); });
+  view.querySelectorAll(".mem").forEach(m => m.onclick = () => { lakeOpen = lakeOpen === m.dataset.id ? null : m.dataset.id; renderLake(); });
+  const qi = $("#lakeQ"); let tm;
+  qi.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { lakeQuery = qi.value; renderLake().then(() => { const n = $("#lakeQ"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); }, 250); };
 }
 
 /* ============ trace drawer ============ */
@@ -771,11 +781,11 @@ addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
 document.addEventListener("click", async e => {
   const c = e.target.closest("[data-refs]"); if (!c) return;
   $("#drawerTitle").textContent = c.dataset.title || "原话";
-  $("#drawerBody").innerHTML = `<p class="muted">正沿着渡绳往回找……</p>`;
+  $("#drawerBody").innerHTML = `<p class="muted">正在找当时的聊天……</p>`;
   drawer.classList.add("open"); scrim.classList.add("open"); drawer.setAttribute("aria-hidden", "false"); $("#drawerClose").focus();
   try {
     const d = await api("trace", { refs: c.dataset.refs });
-    $("#drawerBody").innerHTML = (d.slices || []).map(s => `<div class="rope"><span class="addr">${esc(s.address)} <small class="muted">${esc(hm(s.time) || s.time || "")}</small></span>
+    $("#drawerBody").innerHTML = (d.slices || []).map(s => `<div class="rope"><span class="addr">${esc(hm(s.time) || "")}</span>
       ${(s.lines || []).map(l => `<div class="line"><span class="who ${l.who === "琪琪" ? "her" : "me"}">${esc(l.who)}</span><p>${esc(l.text)}<time>${esc(hm(l.at) || "")}</time></p></div>`).join("")}</div>`).join("") || `<p class="muted">这几段原话没找到，可能还没封存。</p>`;
   } catch (err) { if (err.message !== "auth") $("#drawerBody").innerHTML = `<p class="muted">没取到原话：${esc(err.message)}</p>`; }
 });

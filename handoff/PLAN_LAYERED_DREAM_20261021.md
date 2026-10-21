@@ -298,6 +298,8 @@
 - 琪琪充值 50 元，14:00 余额 54.32 元。
 - 新增 Z3：栖庐设置页的书童卡（12.1）。
 - 新增 Z4：栖庐“娱乐”里的书童信箱（12.2），Z2 的提醒也走这里。
+- **16:03 Z2 上线**（`apply_z2.sh`，回退 `zhibai/Z2/rollback.sh`，开关 `live/state/numbering-health-off`）。书童每次跑完写 `/srv/ctd-memory-lab/status/numbering-health.json`；提醒要等 Z4。上线后实跑一次：39 段、38 封口，判健康。
+- 召回阶段 1 首批（10/10～10/12）通过。发现旧检索的事件只到 9/12，召回方案只补 10 月，9/13～9/30 没人负责；已经让知白在 10 月之后补上（`events.september.v2b.jsonl`）。
 - **15:27 Z1 第 3 轮验收通过，琪琪批准，Claude 上线**（`apply_z1.sh`，回退 `rollback_z1.sh`；快速旁路是 `touch daily-memory-shadow-20260921/state/bookboy-source-check-off`）。只换了书童，便签没动。上线后实跑 10/21 一次：9 个事件，去引号 1 处。
 
 ---

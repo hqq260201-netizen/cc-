@@ -1,0 +1,410 @@
+[
+ {
+  "file": "clawd-01-maid-tea-happy.gif",
+  "outfit": "女仆装",
+  "act": "喝茶",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-02-maid-broom-calm.gif",
+  "outfit": "女仆装",
+  "act": "扫地",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-03-maid-cake-love.gif",
+  "outfit": "女仆装",
+  "act": "捧蛋糕",
+  "face": "喜欢"
+ },
+ {
+  "file": "clawd-04-maid-wave-happy.gif",
+  "outfit": "女仆装",
+  "act": "挥手",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-05-maid-bowl-sulky.gif",
+  "outfit": "女仆装",
+  "act": "捧着小碗",
+  "face": "别扭"
+ },
+ {
+  "file": "clawd-06-dress-umbrella-happy.gif",
+  "outfit": "小裙子",
+  "act": "举伞",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-07-dress-flower-love.gif",
+  "outfit": "小裙子",
+  "act": "捧花",
+  "face": "喜欢"
+ },
+ {
+  "file": "clawd-08-dress-jump-happy.gif",
+  "outfit": "小裙子",
+  "act": "蹦蹦跳",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-09-dress-icecream-happy.gif",
+  "outfit": "小裙子",
+  "act": "吃冰淇淋",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-10-dress-balloon-happy.gif",
+  "outfit": "小裙子",
+  "act": "拿气球",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-11-dress-idle-sulky.gif",
+  "outfit": "小裙子",
+  "act": "站着",
+  "face": "别扭"
+ },
+ {
+  "file": "clawd-12-wizard-wand-calm.gif",
+  "outfit": "帅气巫师",
+  "act": "施魔法",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-13-wizard-wand-happy.gif",
+  "outfit": "帅气巫师",
+  "act": "施魔法",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-14-wizard-book-think.gif",
+  "outfit": "帅气巫师",
+  "act": "看书",
+  "face": "想事情"
+ },
+ {
+  "file": "clawd-15-wizard-idle-angry.gif",
+  "outfit": "帅气巫师",
+  "act": "站着",
+  "face": "生气"
+ },
+ {
+  "file": "clawd-16-lab-clipboard-think.gif",
+  "outfit": "研究员",
+  "act": "做记录",
+  "face": "想事情"
+ },
+ {
+  "file": "clawd-17-lab-laptop-normal.gif",
+  "outfit": "研究员",
+  "act": "敲电脑",
+  "face": "平静"
+ },
+ {
+  "file": "clawd-18-lab-tea-calm.gif",
+  "outfit": "研究员",
+  "act": "喝茶",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-19-lab-idle-surprise.gif",
+  "outfit": "研究员",
+  "act": "站着",
+  "face": "吃惊"
+ },
+ {
+  "file": "clawd-20-worker-wrench-normal.gif",
+  "outfit": "工人",
+  "act": "修东西",
+  "face": "平静"
+ },
+ {
+  "file": "clawd-21-worker-wrench-angry.gif",
+  "outfit": "工人",
+  "act": "修东西",
+  "face": "生气"
+ },
+ {
+  "file": "clawd-22-worker-bowl-happy.gif",
+  "outfit": "工人",
+  "act": "捧着小碗",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-23-worker-wave-happy.gif",
+  "outfit": "工人",
+  "act": "挥手",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-24-doctor-clipboard-calm.gif",
+  "outfit": "医生",
+  "act": "做记录",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-25-doctor-idle-normal.gif",
+  "outfit": "医生",
+  "act": "站着",
+  "face": "平静"
+ },
+ {
+  "file": "clawd-26-doctor-tea-sleep.gif",
+  "outfit": "医生",
+  "act": "喝茶",
+  "face": "困了"
+ },
+ {
+  "file": "clawd-27-pajama-sill-look_up.gif",
+  "outfit": "睡衣",
+  "act": "扒窗台",
+  "face": "望着窗外"
+ },
+ {
+  "file": "clawd-28-pajama-sleepbed-sleep.gif",
+  "outfit": "睡衣",
+  "act": "睡觉",
+  "face": "困了"
+ },
+ {
+  "file": "clawd-29-pajama-tea-calm.gif",
+  "outfit": "睡衣",
+  "act": "喝茶",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-30-pajama-book-sleep.gif",
+  "outfit": "睡衣",
+  "act": "看书",
+  "face": "困了"
+ },
+ {
+  "file": "clawd-31-pajama-idle-cry.gif",
+  "outfit": "睡衣",
+  "act": "站着",
+  "face": "哭哭"
+ },
+ {
+  "file": "clawd-32-prince-wave-happy.gif",
+  "outfit": "王子服",
+  "act": "挥手",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-33-prince-flower-love.gif",
+  "outfit": "王子服",
+  "act": "捧花",
+  "face": "喜欢"
+ },
+ {
+  "file": "clawd-34-prince-idle-calm.gif",
+  "outfit": "王子服",
+  "act": "站着",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-35-prince-idle-sulky.gif",
+  "outfit": "王子服",
+  "act": "站着",
+  "face": "别扭"
+ },
+ {
+  "file": "clawd-36-chef-bowl-happy.gif",
+  "outfit": "厨师",
+  "act": "捧着小碗",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-37-chef-cake-happy.gif",
+  "outfit": "厨师",
+  "act": "捧蛋糕",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-38-chef-idle-angry.gif",
+  "outfit": "厨师",
+  "act": "站着",
+  "face": "生气"
+ },
+ {
+  "file": "clawd-39-scarf-sill-look_up.gif",
+  "outfit": "冬天围巾",
+  "act": "扒窗台",
+  "face": "望着窗外"
+ },
+ {
+  "file": "clawd-40-scarf-tea-calm.gif",
+  "outfit": "冬天围巾",
+  "act": "喝茶",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-41-scarf-shopping-happy.gif",
+  "outfit": "冬天围巾",
+  "act": "买菜",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-42-scarf-umbrella-normal.gif",
+  "outfit": "冬天围巾",
+  "act": "举伞",
+  "face": "平静"
+ },
+ {
+  "file": "clawd-43-sailor-wave-happy.gif",
+  "outfit": "水手服",
+  "act": "挥手",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-44-sailor-jump-happy.gif",
+  "outfit": "水手服",
+  "act": "蹦蹦跳",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-45-sailor-icecream-love.gif",
+  "outfit": "水手服",
+  "act": "吃冰淇淋",
+  "face": "喜欢"
+ },
+ {
+  "file": "clawd-46-none-sill-look_up.gif",
+  "outfit": "原样",
+  "act": "扒窗台",
+  "face": "望着窗外"
+ },
+ {
+  "file": "clawd-47-none-sill-look_up.gif",
+  "outfit": "原样",
+  "act": "扒窗台",
+  "face": "望着窗外"
+ },
+ {
+  "file": "clawd-48-none-sill-happy.gif",
+  "outfit": "原样",
+  "act": "扒窗台",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-49-none-sill-sad.gif",
+  "outfit": "原样",
+  "act": "扒窗台",
+  "face": "难过"
+ },
+ {
+  "file": "clawd-50-none-music-happy.gif",
+  "outfit": "原样",
+  "act": "听歌",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-51-none-music-calm.gif",
+  "outfit": "原样",
+  "act": "听歌",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-52-none-shopping-happy.gif",
+  "outfit": "原样",
+  "act": "买菜",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-53-none-umbrella-normal.gif",
+  "outfit": "原样",
+  "act": "举伞",
+  "face": "平静"
+ },
+ {
+  "file": "clawd-54-none-umbrella-cry.gif",
+  "outfit": "原样",
+  "act": "举伞",
+  "face": "哭哭"
+ },
+ {
+  "file": "clawd-55-none-bowl-happy.gif",
+  "outfit": "原样",
+  "act": "捧着小碗",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-56-none-tea-calm.gif",
+  "outfit": "原样",
+  "act": "喝茶",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-57-none-idle-happy.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-58-none-idle-sad.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "难过"
+ },
+ {
+  "file": "clawd-59-none-idle-cry.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "哭哭"
+ },
+ {
+  "file": "clawd-60-none-idle-angry.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "生气"
+ },
+ {
+  "file": "clawd-61-none-idle-sulky.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "别扭"
+ },
+ {
+  "file": "clawd-62-none-idle-calm.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "安心"
+ },
+ {
+  "file": "clawd-63-none-idle-surprise.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "吃惊"
+ },
+ {
+  "file": "clawd-64-none-idle-love.gif",
+  "outfit": "原样",
+  "act": "站着",
+  "face": "喜欢"
+ },
+ {
+  "file": "clawd-65-none-plant-happy.gif",
+  "outfit": "原样",
+  "act": "浇花",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-66-none-laptop-think.gif",
+  "outfit": "原样",
+  "act": "敲电脑",
+  "face": "想事情"
+ },
+ {
+  "file": "clawd-67-none-balloon-happy.gif",
+  "outfit": "原样",
+  "act": "拿气球",
+  "face": "开心"
+ },
+ {
+  "file": "clawd-68-none-sleepbed-sleep.gif",
+  "outfit": "原样",
+  "act": "睡觉",
+  "face": "困了"
+ }
+]

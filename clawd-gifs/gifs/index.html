@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clawd 衣橱</title>
+<style>
+@font-face { font-family: "WenKai"; src: url("/v3/fonts/wenkai-gb.woff2") format("woff2"); font-display: swap; }
+/* 一格一只 Clawd，像翻相册；筛选条贴在顶上 */
+:root { --paper: #F3EFE7; --card: #FBF8F2; --ink: #2A2722; --ink-2: #6F695E; --ink-3: #A49D90; --accent: #D97757; --line: rgba(42, 39, 34, .1);
+  --text: "WenKai", "Kaiti SC", "STKaiti", serif; --ui: -apple-system, "PingFang SC", "Noto Sans SC", system-ui, sans-serif; }
+@media (prefers-color-scheme: dark) { :root { --paper: #161513; --card: #201E1B; --ink: #ECE6DA; --ink-2: #A9A296; --ink-3: #6E685E; --accent: #E89274; --line: rgba(236, 230, 218, .1); } }
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--ui); padding: 0 max(16px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+header { padding: calc(28px + env(safe-area-inset-top)) 0 10px; }
+h1 { font-family: var(--text); font-weight: 400; font-size: 34px; letter-spacing: .08em; }
+h1 small { font-family: var(--ui); font-size: 13px; color: var(--ink-3); letter-spacing: .05em; margin-left: 8px; }
+.note { margin-top: 6px; font-size: 13px; color: var(--ink-2); }
+.filters { position: sticky; top: 0; z-index: 3; background: var(--paper); padding: 10px 0; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--line); }
+.row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.row::-webkit-scrollbar { display: none; }
+.row b { flex: none; font-weight: 400; font-size: 12px; color: var(--ink-3); padding: 6px 4px 0 0; }
+.chip { flex: none; font: 13px var(--ui); color: var(--ink-2); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grid { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+figure { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+figure img { display: block; width: 100%; height: auto; image-rendering: pixelated; aspect-ratio: 34 / 30; }
+figcaption { padding: 8px 10px 10px; font-size: 13px; line-height: 1.45; }
+figcaption span { color: var(--ink-3); font-size: 12px; }
+.empty { margin-top: 40px; text-align: center; color: var(--ink-3); font-size: 14px; }
+</style>
+</head>
+<body>
+<header><h1>Clawd 衣橱<small id="count"></small></h1><p class="note">长按图片可以存下来。点上面的标签筛选。</p></header>
+<div class="filters" id="filters"></div>
+<div class="grid" id="grid"></div>
+<p class="empty" id="empty" hidden>这个组合还没有画，跟 Claude 说一声就有了。</p>
+<script>
+const keys = [['outfit', '衣服'], ['act', '动作'], ['face', '表情']];
+const pick = { outfit: null, act: null, face: null };
+fetch('index.json').then(r => r.json()).then(list => {
+  const box = document.getElementById('filters');
+  keys.forEach(([k, label]) => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = '<b>' + label + '</b>';
+    ['全部', ...new Set(list.map(x => x[k]))].forEach(v => {
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'chip' + (v === '全部' ? ' on' : ''); c.textContent = v;
+      c.onclick = () => { pick[k] = v === '全部' ? null : v; row.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); draw(); };
+      row.appendChild(c);
+    });
+    box.appendChild(row);
+  });
+  function draw() {
+    const shown = list.filter(x => keys.every(([k]) => !pick[k] || x[k] === pick[k]));
+    document.getElementById('grid').innerHTML = shown.map(x =>
+      `<figure><img src="${x.file}" alt="Clawd ${x.outfit} ${x.act} ${x.face}" loading="lazy"><figcaption>${x.act} · ${x.face}<br><span>${x.outfit}</span></figcaption></figure>`).join('');
+    document.getElementById('count').textContent = shown.length + ' 只';
+    document.getElementById('empty').hidden = shown.length > 0;
+  }
+  draw();
+});
+</script>
+</body>
+</html>

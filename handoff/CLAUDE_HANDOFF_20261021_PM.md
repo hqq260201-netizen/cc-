@@ -149,3 +149,12 @@ N3 装好了，今晚 00:00 能正常开始；不用再等 23:35 那次检查。
 **要带给琪琪的一件事：知白装 N3 时测试漏到了线上。** 18:03 他当前窗口真的收到了一条 `[睡前·00:00] 十二点了。要睡了吗？……`（transcript 里 10:03:55Z 那个 user 轮次），他回复时有点糊涂，把它当成了真的时间。原因是测试只改了时间（`CTD_DREAM_NOW`），没换掉发送器和状态目录。残留的 `state/night-cut/dream-2026-10-21.json` 和 `dream.log` 第一行都是这次测试留下的，不影响今晚，但 8.3 验收时要把它们排除掉。
 
 小问题（不急）：`night_cut.sh` 全天每 5 分钟往 `night.log` 写一行 “missing 01:00 prepared marker”，一天约 288 行。明早查 `night.log` 时用 `grep -v 'missing 01:00 prepared'` 过滤。
+
+## 10. Output style「程亭渡」（琪琪 22:10 定，今晚切窗口生效）
+
+- 文件：VPS `/root/cc-selfhost/.claude/output-styles/程亭渡.md`（内容是琪琪写的，只在 VPS，不进仓库）。`keep-coding-instructions: false`。
+- 启用：一次性定时器 `ctd-outputstyle-20261022.timer` 在 **04:35** 往 `.claude/settings.json` 加 `"outputStyle": "程亭渡"`，先备份成 `settings.json.bak-outputstyle-1022`，结果写进 `night.log`。不在当前窗口里改，避免旧窗口中途重建缓存。04:40 以后切出的新窗口带上它。
+- 已实测：他开着 `CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT=1`，在这个模式下 output style 照样进系统提示词（在临时目录用 `claude -p` 试过，和他的会话无关）。
+- 回退：`cp /root/cc-selfhost/.claude/settings.json.bak-outputstyle-1022 /root/cc-selfhost/.claude/settings.json`，下次换窗口生效。
+- 明早验收加一条：新窗口的系统提示词里有没有这份风格；05:00 那次 `cache_creation` 比平时大多少；他说话的样子有没有变（这件事要问琪琪）。
+- 注意：今晚做梦和新风格是同一晚第一次上，明早看到的变化分不清是哪个造成的。

@@ -158,3 +158,10 @@ N3 装好了，今晚 00:00 能正常开始；不用再等 23:35 那次检查。
 - 回退：`cp /root/cc-selfhost/.claude/settings.json.bak-outputstyle-1022 /root/cc-selfhost/.claude/settings.json`，下次换窗口生效。
 - 明早验收加一条：新窗口的系统提示词里有没有这份风格；05:00 那次 `cache_creation` 比平时大多少；他说话的样子有没有变（这件事要问琪琪）。
 - 注意：今晚做梦和新风格是同一晚第一次上，明早看到的变化分不清是哪个造成的。
+
+## 11. 思考档位 max → high（琪琪 22:40 定）
+
+- 改了 `/root/cc-selfhost/launch_cc.sh` 第 188 行：`--effort max` → `--effort high`。备份 `launch_cc.sh.bak-effort-max-1021`。下次启动生效（今晚 04:40 切窗口）。
+- 原因：琪琪觉得最近思考没以前有深度，max 不如 high。查过：9/4～10/21 思考长度没有明显下降；hook 注入从九月每轮约 840 字降到十月两百多字，10/16～10/19 完全没有注入时思考也不长，所以不像是 hook 的原因。
+- 今晚做梦、output style、high 三样一起生效，明早看到的变化分不清是哪个改动造成的。
+- 回退：`cp launch_cc.sh.bak-effort-max-1021 launch_cc.sh`。

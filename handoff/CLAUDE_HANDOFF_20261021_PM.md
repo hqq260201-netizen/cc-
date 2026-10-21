@@ -13,7 +13,7 @@
 | 16:03 | **Z2 编号健康检查** | 书童每次跑完，写 `/srv/ctd-memory-lab/status/numbering-health.json`（降级、定稿 open>10%、白天两次 0 封口（两次都 ≥3 段才算）、DeepSeek 失败或余额 <10、缺少诊断判“未知”） | 开关：`live/state/numbering-health-off`；回退：`zhibai/Z2/rollback.sh <备份>`，备份路径在 `.z2_backup` |
 | 16:21 | **Z3 书童卡 + Z4 书童信箱** | 栖庐“设置 → 文件”里的书童卡（余额、近 24 小时花费、最近一次整理）；“娱乐”里的“书童”信箱，带数字红点。Z2 异常 / 恢复、余额低于 10 元都会来信。信箱里有一封开通测试信 | 回退：`rollback_z34.sh`（备份路径在 `.z34_backup`） |
 | 16:3x | 栖庐缓存版本 | 知白漏改 `sw.js` 版本，手机一直看不到信箱。Claude 把 `CACHE` 改成 `qilu-v3-100`，`app.js?v=29`。手机上要“打开 → 切后台 → 切回来”才会刷新 | 备份：`public/v3/sw.js.bak-bookboy-1021`、`index.html.bak-bookboy-1021` |
-| 17:18 | **N1 夜间总闸 + N2 夜里流程** | 见第 2 节 | **最快的关法：`rm /root/cc-selfhost/state/night-cut/enabled`**（01:00 自动回到老流程）。完整回退：`CTD_N12_ROLLBACK_APPROVED=YES bash zhibai/N2/rollback_N1_N2.sh` |
+| 17:05 | **N1 夜间总闸 + N2 夜里流程** | 见第 2 节 | **最快的关法：`rm /root/cc-selfhost/state/night-cut/enabled`**（01:00 自动回到老流程）。完整回退：`CTD_N12_ROLLBACK_APPROVED=YES bash zhibai/N2/rollback_N1_N2.sh` |
 
 ## 2. 今晚起的夜里流程（N1+N2，第一次跑）
 

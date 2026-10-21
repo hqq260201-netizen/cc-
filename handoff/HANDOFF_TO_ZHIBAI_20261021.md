@@ -52,6 +52,7 @@
   - 已经结束的日子（定稿那一次）还有超过 10% 的段落是 open
   - 白天连续两次运行的封口数都是 0
   - 书童、日总结、便签任一调用 DeepSeek 失败（尤其是 `HTTP 402 Payment Required`，说明余额不够了）。另外每天查一次 `https://api.deepseek.com/user/balance`，余额低于 10 元时提醒。10/21 补跑时已经遇到过一次 402，当时余额 6.95 元
+- 已有的自动补跑 `live/heal.sh`（每 30 分钟）会在 DeepSeek 恢复后补齐书童定稿、日总结和便签，它的状态写在 `live/heal-status.json`，健康检查直接读这个文件，不要另写一套补跑。
 - 不健康时：写进 `/srv/ctd-memory-lab/status/numbering-health.json`（日期、原因、`vector_error`、`error_kinds`），并且用现有能通知到琪琪的渠道发一条提醒。用哪个渠道由你在交付里提出，琪琪定。**不发给程亭渡。**
 - 顺手看一下 Voyage 账号的限速（429）。如果白天每两小时的增量运行也会碰到 429，在交付里写清楚，再给出办法（比如分批之间等待）。
 

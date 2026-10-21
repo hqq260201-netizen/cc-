@@ -212,7 +212,7 @@ def vitality(meta):
 
 
 def build_ombre():
-    buckets, valence_by_day = [], {}
+    buckets = []
     root = OMBRE / "dynamic"
     for f in root.rglob("*.md") if root.exists() else []:
         meta, body = parse_frontmatter(read_text(f))
@@ -233,12 +233,9 @@ def build_ombre():
             "tags": [str(t) for t in (meta.get("tags") or []) if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(t))][:8],
             "body": body.strip()[:1200],
         })
-        if created and val != 0.5:  # 0.5 is Ombre's unset default, not a mood
-            valence_by_day.setdefault(created, []).append(val)
     count = lambda sub: sum(1 for _ in (OMBRE / sub).rglob("*.md")) if (OMBRE / sub).exists() else 0
     return {
         "buckets": buckets,
-        "valence_by_day": {k: round(sum(v) / len(v), 3) for k, v in valence_by_day.items()},
         "archived": count("archive"), "permanent": count("permanent"),
     }
 
@@ -279,18 +276,6 @@ def dated_dirs(root):
         return []
 
 
-def kinds_for(date):
-    y, m = date[:4], date[5:7]
-    base = CAL / y / m / date
-    names = {2: "感受", 3: "我的目光", 4: "但她说", 6: "经历", 5: "经验"}
-    out = {}
-    for k, name in names.items():
-        rows = read_jsonl(base / f"{k}-raw.jsonl")
-        if rows:
-            out[name] = [r.get("content", "") for r in rows if r.get("content")][:12]
-    return out
-
-
 # ---------------------------------------------------------------- canonical (C-Memory V2)
 def canon():
     con = sqlite3.connect(f"file:{CANON}?mode=ro", uri=True, timeout=5)
@@ -326,89 +311,125 @@ def stars():
     return out
 
 
-def canon_count():
-    try:
-        with canon() as con:
-            return con.execute("SELECT COUNT(*) FROM memory").fetchone()[0]
-    except sqlite3.Error:
-        return None
-
-
 # ---------------------------------------------------------------- endpoints
-def ep_tonight(q):
+# Every category comes back as the same item shape so the page can show any of
+# them as one list: {id, title, date, time?, tag?, body, quote?, refs?}
+def short(t, n=28):
+    t = re.sub(r"\s+", " ", t or "").strip()
+    return t if len(t) <= n else t[:n] + "…"
+
+
+def event_item(e, date):
+    return {"id": e.get("event_id"), "title": e.get("title") or "", "date": date, "time": (e.get("time_start") or "")[11:16], "tag": e.get("category"), "body": e.get("summary") or "", "quote": e.get("card_candidate"), "refs": e.get("source_refs") or []}
+
+
+def latest_events():
     t = today()
+    evs = events_for(t)
+    if evs:
+        return t, evs
     days = dated_dirs(SHADOW)
-    latest = days[-1] if days else t
-    receipt = read_json(day_dir(latest) / "latest-receipt.json", {}) or {}
-    hdays = dated_dirs(HANDOFF)
-    handoff = None
-    if hdays:
-        d = HANDOFF / hdays[-1]
-        mds = sorted(d.glob("*.md"))
-        if mds:
-            handoff = {"date": hdays[-1], "text": strip_md(read_text(mds[0], 1600))}
-    read_ids = set((read_json(INBOX_STATE, {}) or {}).get("read", []) or [])
-    inbox = [m for m in read_jsonl(INBOX) if m.get("id") not in read_ids][-3:]
-    plans = (read_json(PLANS, {}) or {}).get("items", {}) or {}
-    open_plans = sorted((p for p in plans.values() if p.get("status") not in ("done", "dropped", "abandoned", "resolved")), key=lambda p: p.get("created") or "", reverse=True)[:6]
-    murmurs = (read_json(MURMURS, []) or [])[-6:][::-1]
-    ev_total = sum(len(events_for(d)) for d in days)
-    return {
-        "since": SINCE, "date": t, "handoff": handoff,
-        "bookboy": {"generated_at": receipt.get("generated_at"), "slices": receipt.get("fragment_count"), "events": receipt.get("event_count"), "model": receipt.get("bookboy_model"), "finalized": bool(receipt.get("finalized")), "balance": None},
-        "inbox": [{"id": m.get("id"), "title": m.get("title"), "body": (m.get("body") or "")[:140], "created_at": m.get("created_at")} for m in inbox],
-        "events": events_for(t) or events_for(latest),
-        "plans": [{"kind": p.get("kind"), "text": p.get("text"), "said_on": p.get("said_on"), "due": p.get("due")} for p in open_plans],
-        "murmurs": [{"text": m.get("text", "")[:120], "author": m.get("author"), "at": local_iso(m.get("created_at"))} for m in murmurs],
-        "counts": {"messages": ledger.get()["total"], "events": ev_total, "memories": canon_count() or 0, "lanterns": len(ombre()["buckets"])},
-    }
+    return (days[-1], events_for(days[-1])) if days else (t, [])
 
 
-def ep_tide(q):
-    t = dt.date.fromisoformat(today())
-    ago = lambda n: (t - dt.timedelta(days=n)).isoformat()
-    weeks = sorted((SHADOW / "weeks").glob("*.md"))[-4:][::-1] if (SHADOW / "weeks").exists() else []
-    months = sorted((SHADOW / "months").glob("*.md"))[-3:][::-1] if (SHADOW / "months").exists() else []
-    wk = lambda p: " — ".join(s[5:] for s in p.stem.split("_"))
-    return {
-        "today": {"date": ago(0), "text": summary_for(ago(0))[:600], "events": [{"t": (e.get("time_start") or "")[11:16], "title": e.get("title")} for e in events_for(ago(0))]},
-        "recent": [{"date": ago(n), "text": summary_for(ago(n))} for n in (1, 2, 3) if summary_for(ago(n))],
-        "brief": [{"date": ago(n), "text": brief_for(ago(n))} for n in (4, 5, 6, 7) if brief_for(ago(n))],
-        "weeks": [{"range": wk(p), "text": strip_md(read_text(p))} for p in weeks],
-        "months": [{"month": p.stem, "text": strip_md(read_text(p))} for p in months],
-    }
-
-
-def ep_moons(q):
-    month = (q.get("month") or [today()[:7]])[0]
-    if not re.fullmatch(r"\d{4}-\d{2}", month):
-        return {"days": []}
-    per_day, val = ledger.get()["per_day"], ombre()["valence_by_day"]
+def calendar_rows(kinds):
     out = []
-    for i in range(1, 32):
-        d = f"{month}-{i:02d}"
-        n = per_day.get(d, 0)
-        has = day_dir(d).exists()
-        if not n and not has:
-            continue
-        out.append({"date": d, "messages": n, "valence": val.get(d), "events": len(events_for(d)), "brief": brief_for(d)[:80]})
-    return {"days": out}
+    for f in sorted(CAL.glob("*/*/*/*-raw.jsonl"), reverse=True):
+        k = f.name.split("-")[0]
+        if k.isdigit() and int(k) in kinds:
+            for r in read_jsonl(f):
+                if r.get("content"):
+                    out.append((int(k), r))
+    return out
+
+
+def items_today():
+    date, evs = latest_events()
+    return [event_item(e, date) for e in evs]
+
+
+def items_diary():
+    out = []
+    for d in reversed(dated_dirs(SHADOW)[-90:]):
+        body = summary_for(d)
+        if body or brief_for(d):
+            out.append({"id": "day-" + d, "title": brief_for(d) or short(body), "date": d, "tag": "每天", "body": body, "day": d})
+    if (SHADOW / "weeks").exists():
+        for p in sorted((SHADOW / "weeks").glob("*.md"), reverse=True):
+            out.append({"id": "week-" + p.stem, "title": short(strip_md(read_text(p)), 40), "date": p.stem.split("_")[0], "tag": "每周", "body": strip_md(read_text(p))})
+    if (SHADOW / "months").exists():
+        for p in sorted((SHADOW / "months").glob("*.md"), reverse=True):
+            out.append({"id": "month-" + p.stem, "title": strip_md(read_text(p)), "date": p.stem + "-01", "tag": "每月", "body": strip_md(read_text(p))})
+    return out
+
+
+def items_stars():
+    tag = {"pinned": "置顶", "permanent": "永久", "star": "候选", "core": "重要"}
+    return [{"id": x["id"], "title": x["title"], "date": x["date"], "tag": tag[x["kind"]], "body": x["content"]} for x in reversed(stars())]
+
+
+def items_calendar(kinds, tags):
+    return [{"id": r.get("record_id"), "title": short(r["content"]), "date": r.get("date") or "", "tag": tags[k], "body": r["content"]} for k, r in calendar_rows(kinds)]
+
+
+def items_plans():
+    plans = (read_json(PLANS, {}) or {}).get("items", {}) or {}
+    done = ("done", "dropped", "abandoned", "resolved")
+    rows = sorted(plans.items(), key=lambda kv: kv[1].get("created") or "", reverse=True)
+    rows = [r for r in rows if r[1].get("status") not in done] + [r for r in rows if r[1].get("status") in done]  # open ones first
+    return [{"id": k, "title": p.get("text") or "", "date": p.get("said_on") or "", "tag": ("已完成" if p.get("status") in done else p.get("kind")), "body": p.get("quote") or p.get("text") or ""} for k, p in rows]
+
+
+def items_murmur():
+    return [{"id": m.get("id"), "title": m.get("text") or "", "date": local_iso(m.get("created_at"))[:10], "time": local_iso(m.get("created_at"))[11:16], "tag": m.get("author"), "body": m.get("text") or ""} for m in reversed(read_json(MURMURS, []) or [])]
+
+
+def items_all():
+    bs = sorted(ombre()["buckets"], key=lambda b: b["last_active"] or b["created"], reverse=True)
+    word = lambda v: "记得清楚" if v > .6 else "有点模糊" if v > .3 else "快忘了"
+    return [{"id": b["id"], "title": b["title"], "date": b["last_active"] or b["created"], "tag": b["domain"], "body": b["body"], "fade": b["vitality"], "note": word(b["vitality"])} for b in bs]
+
+
+CATS = {
+    "today": items_today, "diary": items_diary, "stars": items_stars,
+    "feel": lambda: items_calendar({2}, {2: "感受"}),
+    "eye": lambda: items_calendar({3, 4}, {3: "他看到的", 4: "你纠正他的"}),
+    "plans": items_plans, "murmur": items_murmur, "all": items_all,
+}
+
+
+def ep_home(q):
+    hdays = dated_dirs(HANDOFF)
+    note = None
+    if hdays:
+        mds = sorted((HANDOFF / hdays[-1]).glob("*.md"))
+        if mds:
+            note = {"date": hdays[-1], "text": strip_md(read_text(mds[0], 1600))}
+    counts = {}
+    for k, f in CATS.items():
+        try:
+            counts[k] = len(f())
+        except Exception:
+            counts[k] = None
+    return {"since": SINCE, "date": today(), "note": note, "counts": counts}
+
+
+def ep_list(q):
+    cat = (q.get("cat") or [""])[0]
+    if cat not in CATS:
+        return {"items": []}
+    items = CATS[cat]()
+    word = (q.get("q") or [""])[0].strip()
+    if word:
+        items = [x for x in items if word in (x.get("title") or "") + (x.get("body") or "")]
+    return {"items": items[:300], "total": len(items)}
 
 
 def ep_day(q):
     d = (q.get("date") or [today()])[0]
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d):
         return {}
-    return {"date": d, "brief": brief_for(d), "summary": summary_for(d), "events": events_for(d), "kinds": kinds_for(d)}
-
-
-def ep_stars(q):
-    return {"stars": stars()}
-
-
-def ep_lake(q):
-    o = ombre()
-    return {"buckets": o["buckets"], "archived": o["archived"], "permanent": o["permanent"]}
+    return {"date": d, "summary": summary_for(d), "events": [event_item(e, d) for e in events_for(d)]}
 
 
 ADDR = re.compile(r"^(\d)\.(\d{1,2})\.(\d{1,2})\.(\d+)$")
@@ -431,7 +452,7 @@ def ep_trace(q):
     return {"slices": out}
 
 
-ROUTES = {"tonight": ep_tonight, "tide": ep_tide, "moons": ep_moons, "day": ep_day, "stars": ep_stars, "lake": ep_lake, "trace": ep_trace}
+ROUTES = {"home": ep_home, "list": ep_list, "day": ep_day, "trace": ep_trace}
 
 
 # ---------------------------------------------------------------- auth
